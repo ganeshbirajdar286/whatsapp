@@ -259,7 +259,7 @@ function Login() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
-    
+
     if (file) {
       setProfilePictureFile(file);
       setProfilePicture(URL.createObjectURL(file))// create url for preview
@@ -290,17 +290,17 @@ function Login() {
       formData.append("username", data.username)
       formData.append("agreed", data.agreed)
       formData.append("about", data.about)
-      
-        console.log(profilePictureFile);
+
+      console.log(profilePictureFile);
       if (profilePictureFile) {
-        formData.append("media",profilePictureFile )// name is  media because in multer we have gave name is media
+        formData.append("media", profilePictureFile)// name is  media because in multer we have gave name is media
         //multer({ storage }).single("media")
       } else {
         formData.append("profilePicture", selectedAvatar)
       }
       await updateUserProfile(formData);
 
-    
+
       toast.success("welcome back to whatsapp");
       navigate("/");
       resetLoginState();
@@ -319,7 +319,7 @@ function Login() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`${theme === "dark" ? "bg-gray-800 text-white" : "bg-white"} p-6 md:p-8 rounded-lg shadow-2xl w-full max-w-md relative z-10 `}
+          className={`${theme === "dark" ? "bg-gray-800 text-white" :"bg-gradient-to-tr from-blue-500 to-green-500"} p-6 md:p-8 rounded-lg shadow-2xl w-full max-w-md relative z-10 `}
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -460,7 +460,7 @@ function Login() {
           {step === 3 && (
             <form
               onSubmit={handleProfileSubmit(onProfileSetup)}
-              className={`space-y-6 bg-white p-6 rounded-2xl shadow-lg w-full max-w-md mx-auto ${theme === "dark" ? "bg-gray-700" : "bg-white"
+              className={`space-y-6  p-6 rounded-2xl shadow-lg w-full max-w-md mx-auto ${theme === "dark" ? "bg-gray-700" : "bg-gradient-to-t from-[#FFFFFF] to-[#F3FDF8]"
                 }`}
             >
 
@@ -486,7 +486,7 @@ function Login() {
                     className="hidden"
                   />
                 </div>
-                <p className="text-gray-500 text-sm">Choose an avatar</p>
+                <p className={`text-sm ${theme === "dark" ? "text-white" : "text-gray-600"}`}>Choose an avatar</p>
               </div>
 
               {/* Avatar Row */}
@@ -494,7 +494,12 @@ function Login() {
                 {avatars.map((avatar, index) => (
                   <div
                     key={index}
-                    onClick={() => setSelectedAvatar(avatar)}
+                    onClick={() => {
+                      setProfilePicture(null), // clear uploaded image
+                      setSelectedAvatar(avatar);
+                    }
+
+                    }
                     className={`p-1 rounded-full cursor-pointer hover:scale-110 transition ${selectedAvatar === avatar ? "ring-4 ring-green-500" : ""
                       }`}
                   >
@@ -528,7 +533,7 @@ function Login() {
                   {...profileRegister("agreed")}
                   className="rounded text-green-500 focus:ring-green-500"
                 />
-                <label className="text-sm text-gray-600">
+                <label className={`text-sm ${theme === "dark" ? "text-white" : "text-gray-600"}`} >
                   I agree to the{" "}
                   <a href="#" className="text-red-500 hover:underline">
                     Terms and Conditions
