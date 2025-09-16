@@ -11,7 +11,7 @@ const conversationSchema=new Schema({
     },
     unreadCount:{
       type:Number,
-      default:0,
+      default:{},
     },
 },{timestamps:true})
 

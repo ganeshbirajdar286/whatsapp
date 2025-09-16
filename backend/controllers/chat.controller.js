@@ -100,37 +100,35 @@ export const getConversation = async (req, res) => {
 //get message of special  conversation
 
 export const getMessage = async (req, res) => {
-    const userId = req.user?.userId;
-    const { conversationId } = req.params;
-    try {
-        let consversation = await Conversation.findById(conversationId);
-        if (!consversation) {
-            return response(res, 400, "conversation not found!!");
-        }
-        if (!consversation?.participants?.includes(userId)) {
-            return response(res, 400, "Not authorized to view conversation!! ");
-        }
-        const messages = await Message.find({ conversation: conversationId })
-            .populate("sender", "username profilePicture")
-            .populate("receiver", "username profilePicture")
-            .sort({ createdAt: 1 });
+  const userId = req.user?.userId;
+  const { conversationId } = req.params;
+  try {
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) return response(res, 400, "Conversation not found");
+    if (!conversation.participants.includes(userId)) return response(res, 400, "Not authorized");
 
-        await Message.updateMany({
-            conversation: conversationId,
-            receiver: userId,
-            messageStatus: { $in: ["send", "delivered"] },
-        }, {
-            $set: { messageStatus: "read" }
-        });
-        consversation.unreadCount = 0;
-        await consversation.save();
+    const messages = await Message.find({ conversation: conversationId })
+      .populate("sender", "username profilePicture")
+      .populate("receiver", "username profilePicture")
+      .sort({ createdAt: 1 });
 
-        return response(res, 200, "message retrivelled ", messages)
-    } catch (error) {
-        console.error(error);
-        return response(res, 500, "Internal server error");
-    }
-}
+    // mark messages as read in DB
+    await Message.updateMany(
+      { conversation: conversationId, receiver: userId, messageStatus: { $in: ["send", "delivered"] } },
+      { $set: { messageStatus: "read" } }
+    );
+
+    // reset unread count for this user on this conversation
+    conversation.unreadCount = conversation.unreadCount || new Map();
+    conversation.unreadCount.set(userId.toString(), 0);
+    await conversation.save();
+
+    return response(res, 200, "Messages retrieved", messages);
+  } catch (error) {
+    console.error(error);
+    return response(res, 500, "Internal server error");
+  }
+};
 
 export const markAsRead = async (req, res) => {
     const { messageIds}  = req.body;
@@ -148,15 +146,15 @@ export const markAsRead = async (req, res) => {
 
          // notify to original sender  
              if(req.io &&  req.socketUserMap){
-              for(const message of message){
-                const senderSocketId=req.socketUserMap.get(message.sender.toString());
+              for(const msg of message){
+                const senderSocketId=req.socketUserMap.get(msg.sender.toString());
                 if(senderSocketId){
                     const updatedMessage ={
-                        _id:message._id,
+                        _id:msg._id,
                         messageStatus:"read",
                     };
                     req.io.to(senderSocketId).emit("message_read",updatedMessage);
-                    await message.save();
+                    await msg.save();
                 }
               }
             }
