@@ -26,7 +26,7 @@ app.use(cookieParser());
 const server =http.createServer(app)
 const io =initializeSocket(server);
 
-//apply coket middleware before routes 
+//apply scoket middleware before routes 
 app.use((req,res,next)=>{
     req.io =io;
     req.socketUserMap=io.socketUserMap;
@@ -35,10 +35,10 @@ app.use((req,res,next)=>{
 
 app.use("/api/auth",authRouter);
 app.use("/api/chat",chatRouter);
-app.use("/api/status",statusRouter);
+app.use("/api/status",statusRouter); 
 
 
 app.listen(port,(req,res)=>{ 
     connectDB();
     console.log(`server started at http://localhost:${port}`);
-})  
+})      

@@ -25,7 +25,7 @@ io.on("connection",(socket)=>{
     let userId=null;
 
  //handle user connection and mark them online in db
- socket.on("user_connection",async(connectingUserId)=>{
+ socket.on("user_connected",async(connectingUserId)=>{
     try {
         userId=connectingUserId;
         onlineUsers.set(userId,socket.id);  // Map {
@@ -55,6 +55,27 @@ io.on("connection",(socket)=>{
         lastSeen:isOnline?new Date : null ,
     })
  })
+ 
+//  same code of get_user_status without use of  callback
+//  // Server
+// socket.on("get_user_status", (requestedUserId) => {
+//   const isOnline = onlineUsers.has(requestedUserId);
+  
+//   // Instead of callback, emit back to that client
+//   socket.emit("user_status_response", {
+//     userId: requestedUserId,
+//     isOnline,
+//     lastSeen: isOnline ? new Date() : null
+//   });
+// });
+
+// // Client
+// socket.emit("get_user_status", "user101");
+
+// socket.on("user_status_response", (data) => {
+//   console.log(data);
+// });
+
 
  //forward message to receiver if online
  socket.on("send_message",async(message)=>{
