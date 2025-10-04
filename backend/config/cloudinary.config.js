@@ -56,4 +56,6 @@ const storage = multer.diskStorage({
   }, 
 });
 
-export const multerMiddleWare = multer({ storage }).single("media");
+
+
+export const multerMiddleWare = multer({ storage, limits: { fileSize: 40 * 1024 * 1024 }, }).single("media");

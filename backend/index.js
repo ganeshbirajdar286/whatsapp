@@ -38,7 +38,7 @@ app.use("/api/chat",chatRouter);
 app.use("/api/status",statusRouter); 
 
 
-app.listen(port,(req,res)=>{ 
+server.listen(port,(req,res)=>{ 
     connectDB();
     console.log(`server started at http://localhost:${port}`);
 })      

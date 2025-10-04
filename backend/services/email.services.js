@@ -50,5 +50,5 @@ transporter.verify((error,success)=>{
     to:email,
     subject:"tour Whatapp Verification  Code",
     html,
-  })
-}
+  }) 
+} 

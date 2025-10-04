@@ -8,7 +8,7 @@ export const isLogined =async(req,res,next)=>{
       }
       try {
           const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
-           req.user=decoded;
+           req.user = decoded
            next();
       } catch (error) {
         console.log(error);

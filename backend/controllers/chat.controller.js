@@ -2,6 +2,7 @@ import { uploadFileToCloudinary } from "../config/cloudinary.config.js";
 import Conversation from "../models/conversation.model.js";
 import response from "../utils/responseHandle.js";
 import Message from "../models/messages.model.js";
+import mongoose from "mongoose";
 
 export const sendMessage = async (req, res) => {
     try {
@@ -103,6 +104,11 @@ export const getMessage = async (req, res) => {
     const userId = req.user?.userId;
     const { conversationId } = req.params;
     try {
+
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+            return response(res, 400, "Invalid conversationId");
+        }
         const conversation = await Conversation.findById(conversationId);
         if (!conversation) return response(res, 400, "Conversation not found");
         if (!conversation.participants.includes(userId)) return response(res, 400, "Not authorized");
@@ -119,13 +125,12 @@ export const getMessage = async (req, res) => {
         );
 
         // reset unread count for this user on this conversation
-        conversation.unreadCount = conversation.unreadCount || new Map();
-        conversation.unreadCount.set(userId.toString(), 0);
+        conversation.unreadCount = 0;
         await conversation.save();
 
         return response(res, 200, "Messages retrieved", messages);
     } catch (error) {
-        console.error(error);
+        console.error("getMessage error:", error);
         return response(res, 500, "Internal server error");
     }
 };

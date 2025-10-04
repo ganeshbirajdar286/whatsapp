@@ -20,7 +20,7 @@ const messageSchema=new Schema({
     content:{type:String},
     imageOrVideoUrl:{type:String},
     contentType:{type:String,enum:["image","video","text"]},
-    reaction:[{
+    reactions:[{
         user:{
             type:mongoose.Schema.Types.ObjectId,
          ref:"User",
