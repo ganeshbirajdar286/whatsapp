@@ -69,7 +69,7 @@ function SideBar() {
       >
         <MdRadioButtonChecked
           className={`h-6 w-6 ${
-            activeTab === "chats"
+            activeTab === "status"
               ? theme === "dark"
                 ? "text-gray-800 "
                 : " "
@@ -95,7 +95,7 @@ function SideBar() {
         ) : (
           <MdRadioButtonChecked
             className={`h-6 w-6 ${
-              activeTab === "chats"
+              activeTab === "profile"
                 ? theme === "dark"
                   ? "text-gray-800 "
                   : " "
@@ -114,10 +114,10 @@ function SideBar() {
       >
         <FaCog
           className={`h-6 w-6 ${
-            activeTab === "chats"
+            activeTab === "setting"
               ? theme === "dark"
                 ? "text-gray-800 "
-                : " "
+                : " text-white"
               : theme === "dark"
               ? "text-gray-300"
               : "text-gray-800"

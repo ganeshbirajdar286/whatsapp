@@ -64,52 +64,51 @@ function Layout({ children, isThemeDialogOpen, toggleThemeDialog, isStatusPrevie
         </div>
         {isMobile && <SideBar />}
         {isThemeDialogOpen && (
-          <div className='fixed insert-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-            <div className={`${theme === "dark" ? "bg-[#202c33] text-white " : "bg-white text-black"} p-6 rounded-lg shadow-lg max-w-sm w-full`}>
-              <h2 className='flex items-center space-x-3 cursor-pointer '>
+          <div className="fixed inset-0 flex items-center justify-center bg-opacity-20 z-50">
+            <div
+              className={`${theme === "dark"
+                  ? "bg-[#202c33] text-white"
+                  : "bg-white text-black"
+                } p-6 rounded-lg shadow-lg max-w-sm w-full`}
+            >
+              <h2 className="text-lg font-semibold mb-4 text-center">
                 Choose a theme
               </h2>
-              <div className='space-y-4'>
-                <label className='flex items-center space-x-3 cursor-pointer'>
+
+              <div className="space-y-4">
+                <label className="flex items-center space-x-3 cursor-pointer">
                   <input
-                    type='radio'
+                    type="radio"
                     value="light"
                     checked={theme === "light"}
                     onChange={() => setTheme("light")}
-                    className='from-radio text-blue-600'
-                  >
-                  </input>
-                  <span>light</span>
+                    className="form-radio text-blue-600"
+                  />
+                  <span>Light</span>
                 </label>
 
-                <label className='flex items-center space-x-3 cursor-pointer'>
+                <label className="flex items-center space-x-3 cursor-pointer">
                   <input
-                    type='radio'
+                    type="radio"
                     value="dark"
                     checked={theme === "dark"}
                     onChange={() => setTheme("dark")}
-                    className='from-radio text-blue-600'
-                  >
-                  </input>
-                  <span>dark</span>
+                    className="form-radio text-blue-600"
+                  />
+                  <span>Dark</span>
                 </label>
               </div>
+
               <button
                 onClick={toggleThemeDialog}
-
-                className='mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-600 transition duration-200'
+                className="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200"
               >
                 Close
               </button>
             </div>
-            {/* status preview */}
-            {isStatusPreviewOpen && (
-              <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50'>
-                {statusPreviewContent}
-              </div>
-            )}
           </div>
         )}
+
       </div>
 
     </>

@@ -4,7 +4,7 @@ import  {createJSONStorage, persist } from "zustand/middleware"
 const useUserStore = create(
    persist(
       (set)=>({
-          user:null,
+          user:null, 
           isAuthenticated:false,
          setUser:(userData)=>set({user:userData,isAuthenticated:true}),//updates both user and isAuthenticated: true
           clearUser:()=>set({user:null,isAuthenticated:false}), //resets everything back to logged-out state

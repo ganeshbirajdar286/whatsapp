@@ -8,9 +8,29 @@ import HomePage from './components/HomePage';
 import UserDetail from './components/UserDetail.jsx';
 import Status from './pages/statusSection/status.jsx';
 import Settinng from './pages/settingSection/Settinng.jsx';
+import useUserStore from './store/useUserStore.js';
+import { useEffect } from 'react';
+import { disconnectSocket, initializeSocket } from './pages/services/chat.services.js';
+import { useChatStore } from './store/chatStore.js';
 
 
 function App() {
+  const {user}=useUserStore();
+  const {setCurrentUser,initSocketListeners,cleanup}=useChatStore();
+
+  useEffect(()=>{
+    if(user?._id){
+      const socket = initializeSocket();
+       if(socket){
+        setCurrentUser(user);
+        initSocketListeners();
+       }
+    }
+    return ()=>{
+      cleanup();
+      disconnectSocket();
+    }
+  },[user,setCurrentUser,initSocketListeners])
   const router = createBrowserRouter(
     createRoutesFromElements(
       <>

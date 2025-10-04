@@ -319,7 +319,7 @@ function Login() {
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className={`${theme === "dark" ? "bg-gray-800 text-white" :"bg-gradient-to-tr from-blue-500 to-green-500"} p-6 md:p-8 rounded-lg shadow-2xl w-full max-w-md relative z-10 `}
+          className={`${theme === "dark" ? "bg-gray-800 text-white" : "bg-white"} p-6 md:p-8 rounded-lg shadow-2xl w-full max-w-md relative z-10 `}
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -347,7 +347,6 @@ function Login() {
                 <div className='flex'>
                   <div className='relative w-1/3'>
                     <button type='button' className={`flex-shrink-0 z-10  inline-flex items-center py-2.5  px-4 text-sm font-medium ${theme === "dark" ? "text-white bg-gray-700 border-gray-600" : "text-gray-900 bg-gray-100 border-gray-300"} border rounded-s-lg  focus:right-4 focus:outline-none focus:ring-gray-100 cursor-pointer`} onClick={() => setShowDropDown(!showDropDown)}>
-
                       <div className='flex justify-center items-center gap-2'>
                         <img src={selectedCountry.flag} />
                         {selectedCountry.dialCode}
@@ -360,7 +359,7 @@ function Login() {
                           <input type="text" placeholder="Search contries..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className={`w-full px-2 py-1 border ${theme === "dark" ? "bg-gray-600 text-white border-gray-500" : "bg-white border-grap-300  rounded-md  focus:outline-none focus:ring"}
+                            className={`w-full px-2 py-1 border ${theme === "dark" ? "bg-gray-600 text-black border-gray-500" : "bg-white text-black border-grap-300  rounded-md  focus:outline-none focus:ring"}
                           focus:right-2 focus:ring-green-500 
                           `}
                           ></input>
@@ -369,7 +368,7 @@ function Login() {
                           <button key={country.alpha2}
                             type='button'
                             className={`w-full text-left px-2 py-2  ${theme === "dark" ? "hover:bg-gray-600" :
-                              "hover:bg-gray-300"
+                              "hover:bg-gray-300 text-black"
                               } focus:outline-none focus:bg-gray-500`}
                             onClick={() => {
                               setSelectedCountry(country)
@@ -386,13 +385,21 @@ function Login() {
                         )}
                       </div>
                     )}
-                  </div>
-                  <input type="text"
+                  </div >
+                  <input
+                    type="text"
                     {...loginRegister("phoneNumber")}
-                    value={phoneNumber} placeholder='Enter Phone No'
-                    onChange={(e) => { setPhoneNumber(e.target.value) }}
-                    className={`w-2/3 px-4 py-2 border ${theme === "dark" ? "bg-gray-700  border-gray-600 text-white " : "bg-white border-gray-300"} focus:right-2 focus:ring-green-500  rounded-md  focus:outline-none ${loginErrors.phoneNumber ? "border-red-500" : ""}`}>
+                    value={phoneNumber}
+                    placeholder="Enter Phone No"
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className={`w-2/3 px-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-green-500 
+    ${theme === "dark"
+                        ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                        : "bg-white border-gray-500 text-gray-700 placeholder-gray-400"} 
+    ${loginErrors.phoneNumber ? "border-red-500 ring-red-500" : ""}`}
+                  >
                   </input>
+
                 </div>
                 {loginErrors.phoneNumber && (
                   <p className='text-red-500 text-sm'>{loginErrors.phoneNumber.message}</p>
@@ -412,7 +419,7 @@ function Login() {
                   {...loginRegister("email")}
                   value={email} placeholder='Email (OPTIONAL)'
                   onChange={(e) => { setEmail(e.target.value) }}
-                  className={`w-full bg-transparent focus:outline-none  ${theme === "dark" ? " text-white " : "bg-black"}${loginErrors.email ? "border-red-500" : ""}`}>
+                  className={`w-full  focus:outline-none  ${theme === "dark" ? "bg-gray-700  border-gray-600 text-white " : "bg-white text-gray-700 border-gray-300"}${loginErrors.email ? "border-red-500" : ""}`}>
                 </input>
                 {loginErrors.email && (
                   <p className='text-red-500 text-sm'>{loginErrors.email.message}</p>
@@ -437,7 +444,7 @@ function Login() {
                     maxLength={1}
                     value={digit}
                     onChange={(e) => otpHandleChange(index, e.target.value)}
-                    className={`w-12 h-12 text-center border ${theme === "dark" ? "bg-gray-700 border-gray-600  text-white" : "bg-white border-gray-300"} rounded-md focus:ring-2 focus:ring-green-500${otpErrors.otp ? "border-red-500 " : ""}`}
+                    className={`w-12 h-12 text-center border ${theme === "dark" ? "bg-gray-700 border-gray-600  text-white" : "bg-white text-gray-700 border-gray-300"} rounded-md focus:ring-2 focus:ring-green-500${otpErrors.otp ? "border-red-500 " : ""}`}
                   />
                 ))}
               </div>
@@ -496,7 +503,7 @@ function Login() {
                     key={index}
                     onClick={() => {
                       setProfilePicture(null), // clear uploaded image
-                      setSelectedAvatar(avatar);
+                        setSelectedAvatar(avatar);
                     }
 
                     }
@@ -515,12 +522,16 @@ function Login() {
               {/* Username Input */}
               <div className="relative">
                 <FaUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  {...profileRegister("username")}
-                  type="text"
-                  placeholder="Username"
-                  className="w-full pl-10 pr-3 py-2 border rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-green-500 border-gray-300"
-                />
+               <input
+  {...profileRegister("username")}
+  type="text"
+  placeholder="Username"
+  className={`w-full pl-10 pr-3 py-2 border rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-green-500
+    ${theme === "dark" 
+      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400" 
+      : "bg-white border-gray-300 text-gray-700 placeholder-gray-500"}`}
+/>
+
                 {ProfileErrors.username && (
                   <p className="text-red-500 text-sm mt-1">{ProfileErrors.username.message}</p>
                 )}

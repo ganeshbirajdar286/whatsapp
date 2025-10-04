@@ -22,7 +22,6 @@ function HomePage() {
        getAllUser()
     },[])
 
-    console.log(allUsers);
   return (
     <>
       <Layout>

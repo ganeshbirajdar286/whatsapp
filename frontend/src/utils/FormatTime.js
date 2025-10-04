@@ -1,4 +1,4 @@
-  const quickReactions = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
+  
 
 
   export default function formatTimestamp(timestamp) {
