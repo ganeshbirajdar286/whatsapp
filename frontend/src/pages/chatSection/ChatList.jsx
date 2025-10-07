@@ -28,13 +28,13 @@ function ChatList() {
       unreadCount: conv.unreadCount || 0, // reactive unread count
     };
   });
-  console.log(chatContacts);
+
 
   // Filter contacts by search term
   const filterContacts = chatContacts.filter((contact) =>
     contact?.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
+  
   return (
     <div
       className={`w-full border-r h-screen ${
@@ -87,18 +87,18 @@ function ChatList() {
                   chatStore.setCurrentConversation(contact.conversation._id);
 
                   // Reset unread count immediately
-                  chatStore.set((state) => {
-                    const updatedConvs = state.conversations.data.map((conv) => {
-                      if (conv._id === contact.conversation._id) {
-                        return { ...conv, unreadCount: 0 };
-                      }
-                      return conv;
-                    });
-                    return { conversations: { ...state.conversations, data: updatedConvs } };
-                  });
+                  // chatStore.set((state) => {
+                  //   const updatedConvs = state.conversations.data.map((conv) => {
+                  //     if (conv._id === contact.conversation._id) {
+                  //       return { ...conv, unreadCount: 0 };
+                  //     }
+                  //     return conv;
+                  //   });
+                  //   return { conversations: { ...state.conversations, data: updatedConvs } };
+                  // });
 
                   // Mark messages as read in backend
-                  chatStore.markMessagesAsRead();
+                  //chatStore.markMessagesAsRead();
                 }
               }}
               className={`p-3 flex items-center cursor-pointer ${
@@ -145,8 +145,7 @@ function ChatList() {
                     {contact?.conversation?.lastMessage?.content}
                   </p>
 
-                  {contact.unreadCount > 0 &&
-                    contact?.conversation?.lastMessage?.receiver === user?._id && (
+                  {contact.unreadCount > 0  && (
                       <p
                         className={`text-sm font-semibold w-6 h-6 flex justify-center items-center bg-yellow-500 ${
                           theme === "dark" ? "text-gray-800" : "text-gray-900"

@@ -18,6 +18,7 @@ function HomePage() {
       }
     }
 
+     console.log(allUsers);
     useEffect(()=>{
        getAllUser()
     },[])

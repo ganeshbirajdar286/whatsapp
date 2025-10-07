@@ -444,6 +444,10 @@ export const useChatStore = create((set, get) => ({
     const { onlineUsers } = get();
     return onlineUsers.get(userId)?.lastSeen || null;
   },
+
+   setCurrentConversation: (conversationId) =>
+    set({ currentConversation: conversationId }),
+
   cleanup: () => {
     set({
       conversations: [],
