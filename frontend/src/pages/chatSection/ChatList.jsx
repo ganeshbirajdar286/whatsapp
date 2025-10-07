@@ -7,7 +7,8 @@ import { motion } from "framer-motion";
 import formatTimestamp from "../../utils/FormatTime";
 import { useChatStore } from "../../store/chatStore";
 
-function ChatList() {
+function ChatList({contacts}) {
+  console.log(contacts);
   const setSelectedContact = useLayoutStore((state) => state.setSelectedContact);
   const selectedContact = useLayoutStore((state) => state.SelectedContact);
   const { theme } = useThemeStore();
@@ -17,24 +18,25 @@ function ChatList() {
   const chatStore = useChatStore();
   const { conversations, currentConversation } = chatStore;
 
-  // Generate a dynamic contact list from conversations
-  const chatContacts = (conversations?.data || []).map((conv) => {
-    const otherUser = conv.participants.find(
-      (p) => p._id !== chatStore.currentUser?._id
-    );
-    return {
-      ...otherUser,
-      conversation: conv,
-      unreadCount: conv.unreadCount || 0, // reactive unread count
-    };
-  });
-
-
-  // Filter contacts by search term
-  const filterContacts = chatContacts.filter((contact) =>
-    contact?.username?.toLowerCase().includes(searchTerm.toLowerCase())
+ // Merge contacts with conversation data
+const contactsWithConversations = (contacts || []).map((contact) => {
+  const conv = (conversations?.data || []).find((c) =>
+    c.participants.some((p) => p._id === contact._id)
   );
-  
+
+  return {
+    ...contact,
+    conversation: conv,
+    unreadCount: conv?.unreadCount || 0, // reactive unread count
+  };
+});
+
+// Filter merged contacts by search term
+const filterContacts = contactsWithConversations.filter((contact) =>
+  contact.username?.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+  console.log(contacts);
   return (
     <div
       className={`w-full border-r h-screen ${

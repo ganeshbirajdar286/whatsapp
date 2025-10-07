@@ -72,12 +72,12 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
           (participant) => participant._id === selectedContact?._id
         )
       );
-      if (conversation._id) {
+      if (conversation?._id) {
         fetchMassages(conversation?._id);
       }
     }
   }, [selectedContact, conversations]);
-  4;
+  ;
 
   useEffect(() => {
     fetchConversations();
