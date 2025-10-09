@@ -58,7 +58,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
   );
   const currentConversationId = conversation?._id
   
-
+  
 
   //get online status and lastseen
   const online = isUserOnline(selectedContact?._id);
@@ -80,6 +80,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
   ;
 
   useEffect(() => {
+    selectedContact=null
     fetchConversations();
   }, []);
 
