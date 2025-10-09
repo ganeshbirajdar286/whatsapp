@@ -16,7 +16,7 @@ function ChatList({contacts}) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const chatStore = useChatStore();
-  const { conversations, currentConversation } = chatStore;
+  const { conversations } = chatStore;
 
  // Merge contacts with conversation data
 const contactsWithConversations = (contacts || []).map((contact) => {
@@ -87,20 +87,19 @@ const filterContacts = contactsWithConversations.filter((contact) =>
                 if (contact?.conversation?._id) {
                   // Update current conversation in store
                   chatStore.setCurrentConversation(contact.conversation._id);
+                 // Reset unread count immediately
+                  chatStore.set((state) => {
+                    const updatedConvs = state.conversations.data.map((conv) => {
+                      if (conv._id === contact.conversation._id) {
+                        return { ...conv, unreadCount: 0 };
+                      }
+                      return conv;
+                    });
+                    return { conversations: { ...state.conversations, data: updatedConvs } };
+                  });
 
-                  // Reset unread count immediately
-                  // chatStore.set((state) => {
-                  //   const updatedConvs = state.conversations.data.map((conv) => {
-                  //     if (conv._id === contact.conversation._id) {
-                  //       return { ...conv, unreadCount: 0 };
-                  //     }
-                  //     return conv;
-                  //   });
-                  //   return { conversations: { ...state.conversations, data: updatedConvs } };
-                  // });
-
-                  // Mark messages as read in backend
-                  //chatStore.markMessagesAsRead();
+                  //Mark messages as read in backend
+                  chatStore.markMessagesAsRead();
                 }
               }}
               className={`p-3 flex items-center cursor-pointer ${
