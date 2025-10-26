@@ -71,6 +71,17 @@ function MessageBubble({
                   alt="image-video"
                   className="rounded-lg "
                 />
+                 <p className="mr-2">{message.content}</p>
+              </div>
+            )}
+             {message.contentType === "video" && (
+              <div>
+                <video
+                  src={message.imageOrVideoUrl}
+                 controls
+                  className="rounded-lg "
+                />
+                 <p className="mr-2">{message.content}</p>
               </div>
             )}
           </div>
@@ -204,7 +215,6 @@ function MessageBubble({
                 <button
                   onClick={() => {
                     deletedMessage({messageId: message?._id});
-                    console.log(message?._id);
                     setShowOption(false);
                   }}
                   className="flex items-center w-full px-4 py-2 gap-3 rounded-lg text-red-600 hover:bg-red-100 "

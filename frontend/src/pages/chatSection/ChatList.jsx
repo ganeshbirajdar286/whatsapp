@@ -7,8 +7,7 @@ import { motion } from "framer-motion";
 import formatTimestamp from "../../utils/FormatTime";
 import { useChatStore } from "../../store/chatStore";
 
-function ChatList({contacts}) {
-  console.log(contacts);
+function ChatList({ contacts }) {
   const setSelectedContact = useLayoutStore((state) => state.setSelectedContact);
   const selectedContact = useLayoutStore((state) => state.SelectedContact);
   const { theme } = useThemeStore();
@@ -18,25 +17,24 @@ function ChatList({contacts}) {
   const chatStore = useChatStore();
   const { conversations } = chatStore;
 
- // Merge contacts with conversation data
-const contactsWithConversations = (contacts || []).map((contact) => {
-  const conv = (conversations?.data || []).find((c) =>
-    c.participants.some((p) => p._id === contact._id)
+  // Merge contacts with conversation data
+  const contactsWithConversations = (contacts || []).map((contact) => {
+    const conv = (conversations?.data || []).find((c) =>
+      c.participants.some((p) => p._id === contact._id)
+    );
+
+    return {
+      ...contact,
+      conversation: conv,
+      unreadCount: conv?.unreadCount || 0, // reactive unread count
+    };
+  });
+
+  // Filter merged contacts by search term
+  const filterContacts = contactsWithConversations.filter((contact) =>
+    contact.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return {
-    ...contact,
-    conversation: conv,
-    unreadCount: conv?.unreadCount || 0, // reactive unread count
-  };
-});
-
-// Filter merged contacts by search term
-const filterContacts = contactsWithConversations.filter((contact) =>
-  contact.username?.toLowerCase().includes(searchTerm.toLowerCase())
-);
-
-  console.log(contacts);
   return (
     <div
       className={`w-full border-r h-screen ${
@@ -87,19 +85,9 @@ const filterContacts = contactsWithConversations.filter((contact) =>
                 if (contact?.conversation?._id) {
                   // Update current conversation in store
                   chatStore.setCurrentConversation(contact.conversation._id);
-                 // Reset unread count immediately
-                  chatStore.set((state) => {
-                    const updatedConvs = state.conversations.data.map((conv) => {
-                      if (conv._id === contact.conversation._id) {
-                        return { ...conv, unreadCount: 0 };
-                      }
-                      return conv;
-                    });
-                    return { conversations: { ...state.conversations, data: updatedConvs } };
-                  });
 
-                  //Mark messages as read in backend
-                  chatStore.markMessagesAsRead();
+                  // Mark messages as read in store (unread count updated)
+                  chatStore.markMessagesAsRead(contact.conversation._id);
                 }
               }}
               className={`p-3 flex items-center cursor-pointer ${
@@ -146,15 +134,15 @@ const filterContacts = contactsWithConversations.filter((contact) =>
                     {contact?.conversation?.lastMessage?.content}
                   </p>
 
-                  {contact.unreadCount > 0  && (
-                      <p
-                        className={`text-sm font-semibold w-6 h-6 flex justify-center items-center bg-yellow-500 ${
-                          theme === "dark" ? "text-gray-800" : "text-gray-900"
-                        } rounded-full`}
-                      >
-                        {contact.unreadCount}
-                      </p>
-                    )}
+                  {contact.unreadCount > 0 && (
+                    <p
+                      className={`text-sm font-semibold w-6 h-6 flex justify-center items-center bg-yellow-500 ${
+                        theme === "dark" ? "text-gray-800" : "text-gray-900"
+                      } rounded-full`}
+                    >
+                      {contact.unreadCount}
+                    </p>
+                  )}
                 </div>
               </div>
             </motion.div>

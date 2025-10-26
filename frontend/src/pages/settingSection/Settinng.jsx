@@ -4,7 +4,7 @@ import useUserStore from "../../store/useUserStore";
 import Layout from "../../components/layout";
 import { toast } from "react-toastify"; // ✅ add toast import if using react-toastify
 import { FaComment, FaQuestionCircle, FaUser } from "react-icons/fa";
-import {logoutUser }from "../services/user.services"
+import { logoutUser } from "../services/user.services";
 
 function Settinng() {
   const [isThemeDialogopen, setIsThemeDialogOpen] = useState(false);
@@ -40,7 +40,6 @@ function Settinng() {
             : "bg-white text-black"
         }`}
       >
-        {/* Settings panel */}
         <div
           className={`w-[400px] border rounded-2xl shadow-lg p-6 ${
             theme === "dark" ? "border-gray-600" : "border-gray-200"

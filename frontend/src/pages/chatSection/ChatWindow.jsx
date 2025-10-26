@@ -17,7 +17,10 @@ import {
 import whatsappImage from "../../assets/whatsappImage.png";
 import { isToday, isYesterday, format } from "date-fns";
 import MessageBubble from "./MessageBubble";
-import EmojiPicker from "emoji-picker-react"; 
+import EmojiPicker from "emoji-picker-react";
+import VideoCallManger from "../videoCall/videoCallManger";
+import { getSocket } from "../services/chat.services";
+import useVedioCallStore from "../../store/videoCallStore";
 
 const isValidate = (date) => {
   return date instanceof Date && !isNaN(date);
@@ -35,6 +38,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
   const fileInputRef = useRef(null);
   const { theme } = useThemeStore();
   const { user } = useUserStore();
+  const socket =getSocket();
   const {
     messages,
     loading,
@@ -56,9 +60,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
   const conversation = conversations?.data?.find((conv) =>
     conv.participants.some((p) => p._id === selectedContact?._id)
   );
-  const currentConversationId = conversation?._id
-  
-  
+  const currentConversationId = conversation?._id;
 
   //get online status and lastseen
   const online = isUserOnline(selectedContact?._id);
@@ -77,10 +79,8 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
       }
     }
   }, [selectedContact, conversations]);
-  ;
-
   useEffect(() => {
-    selectedContact=null
+    selectedContact = null;
     fetchConversations();
   }, []);
 
@@ -109,18 +109,32 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
     };
   }, [message, selectedContact, startTyping, stopTyping]);
 
-
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setShowFileMenu(file);
-      if (file.type.startsWith("image/")) {
-        setFilePreview(URL.createObjectURL(file));
-      }
+const handleFileChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setSelectedFile(file);
+    setShowFileMenu(false); // ✅ close file menu properly
+    if (file.type.startsWith("image/") || file.type.startsWith("video/")) {
+      setFilePreview(URL.createObjectURL(file));
     }
-  };
+  }
+};
+
+const handleVideoCall=()=>{
+  if(selectedContact && online){
+    const {initiateCall}=useVedioCallStore.getState();
+    const avatar = selectedContact?.profilePicture;
+  initiateCall(
+    selectedContact?._id,
+    selectedContact?.username,
+    avatar,
+    "video",
+  )
+  }else{
+    alert("User is offline. Cannot initate call")
+  }
+}
+
 
   const handleSendMessage = async () => {
     if (!selectedContact) return;
@@ -163,17 +177,15 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
       dateString = format(date, "EEEE MMM d");
     }
 
-   
- 
-
     return (
       <>
         <div className="flex justify-center my-4">
           <span
-            className={`px-4 py-2 rounded-full text-sm ${theme === "dark"
-              ? "bg-gray-700 text-gray-300"
-              : "bg-gray-200 text-gray-600"
-              }`}
+            className={`px-4 py-2 rounded-full text-sm ${
+              theme === "dark"
+                ? "bg-gray-700 text-gray-300"
+                : "bg-gray-200 text-gray-600"
+            }`}
           >
             {dateString}
           </span>
@@ -185,19 +197,19 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
   // grouping  of messages
   const groupedMessages = Array.isArray(messages)
     ? messages.reduce((acc, message) => {
-      if (!message.createdAt) return acc;
-      const date = new Date(message.createdAt);
-      if (isValidate(date)) {
-        const dateString = format(date, "yyyy-MM-dd"); // ✅ Correct: MM = Month
-        if (!acc[dateString]) {
-          acc[dateString] = [];
+        if (!message.createdAt) return acc;
+        const date = new Date(message.createdAt);
+        if (isValidate(date)) {
+          const dateString = format(date, "yyyy-MM-dd"); // ✅ Correct: MM = Month
+          if (!acc[dateString]) {
+            acc[dateString] = [];
+          }
+          acc[dateString].push(message);
+        } else {
+          console.error("invalid date for message ", message);
         }
-        acc[dateString].push(message);
-      } else {
-        console.error("invalid date for message ", message);
-      }
-      return acc;
-    }, {})
+        return acc;
+      }, {})
     : {};
 
   const handleReaction = (messageId, emoji) => {
@@ -206,39 +218,46 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
 
   if (!selectedContact) {
     return (
+      <>
       <div className="flex-1 flex flex-col items-center justify-center mx-auto h-screen text-center">
         <div className="max-w-md">
           <img src={whatsappImage} alt="chat-app" className="w-full h-auto" />
           <h2
-            className={`text-3xl font-semibold mb-4 ${theme === "dark" ? "text-white " : "text-black"
-              } `}
+            className={`text-3xl font-semibold mb-4 ${
+              theme === "dark" ? "text-white " : "text-black"
+            } `}
           >
             Select a conversation to start chatting
           </h2>
           <p
-            className={` ${theme === "dark" ? "text-gray-400 " : "text-gray-600"
-              } mb-6 `}
+            className={` ${
+              theme === "dark" ? "text-gray-400 " : "text-gray-600"
+            } mb-6 `}
           >
             Choose a contact for list on begin messaging
           </p>
           <p
-            className={` ${theme === "dark" ? "text-gray-400 " : "text-gray-600"
-              } text-sm mt-8 flex items-center justify-center gap-2 `}
+            className={` ${
+              theme === "dark" ? "text-gray-400 " : "text-gray-600"
+            } text-sm mt-8 flex items-center justify-center gap-2 `}
           >
             <FaLock className="h-4 w-4 " />
             Your personal messages are end-to-end encrypted
           </p>
         </div>
       </div>
+      </>
     );
   }
   return (
+    <>
     <div className="flex-1 h-screen w-full flex flex-col">
       <div
-        className={`p-4 ${theme === "dark"
-          ? "bg-[#303430] text-white "
-          : " bg-[rgb(239,242,245)] text-gray-600 "
-          } flex `}
+        className={`p-4 ${
+          theme === "dark"
+            ? "bg-[#303430] text-white "
+            : " bg-[rgb(239,242,245)] text-gray-600 "
+        } flex `}
       >
         <button
           className="mr-2 focus:outline-none "
@@ -261,20 +280,21 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
             </>
           ) : (
             <p
-              className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+              className={`text-sm ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
             >
               {online
                 ? "Online"
                 : lastSeen
-                  ? `Last seen ${format(new Date(lastSeen), "HH:mm")}`
-                  : "Offline"}
+                ? `Last seen ${format(new Date(lastSeen), "HH:mm")}`
+                : "Offline"}
             </p>
           )}
         </div>
         <div className="flex items-center space-x-4 ">
           <button className="focus:outline-none">
-            <FaVideo className="h-5  w-5 " />
+            <FaVideo className="h-5  w-5  text-green-500 hover:text-green-600 " onClick={handleVideoCall}  title={online?"start video  call":"user is offline"} />
           </button>
           <button>
             <FaEllipsisV className="h-5 w-5" />
@@ -282,8 +302,9 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
         </div>
       </div>
       <div
-        className={`flex-1 p-4 overflow-y-auto ${theme === "dark" ? "bg-[#191a1a]" : "bg-[rgb(241,236,229)]"
-          }`}
+        className={`flex-1 p-4 overflow-y-auto ${
+          theme === "dark" ? "bg-[#191a1a]" : "bg-[rgb(241,236,229)]"
+        }`}
       >
         {/* explaination
          const groupedMessages = {
@@ -303,17 +324,13 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
 
         {Object.entries(groupedMessages).map(([date, msgs]) => (
           <React.Fragment key={date}>
-            
             {/* Render date separator */}
             {renderDateSeparator(new Date(date))}
 
             {/* Render messages for the selected conversation */}
 
-             
             {msgs
-              .filter(
-                (msg) => msg.conversation === currentConversationId
-              )
+              .filter((msg) => msg.conversation === currentConversationId)
               .map((msg) => (
                 <MessageBubble
                   key={msg._id || msg.tempId}
@@ -322,7 +339,6 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
                   currentUser={user}
                   OnReact={handleReaction}
                   deletedMessage={deletedMessage}
-                  
                 />
               ))}
           </React.Fragment>
@@ -332,11 +348,20 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
       </div>
       {filePreview && (
         <div className="relative  p-2 ">
-          <img
-            src={filePreview}
-            alt="file-preview"
-            className="w-80 object-cover rounded  shadow-lg  mx-auto "
-          />
+          {selectedFile?.type.startsWith("video/") ? (
+            <video
+              src={filePreview}
+              controls
+              className="w-80 object-cover rounded shadow-lg mx-auto"
+            />
+          ) : (
+            <img
+              src={filePreview}
+              alt="file-preview"
+              className="w-80 object-cover rounded  shadow-lg  mx-auto "
+            />
+          )}
+
           <button
             onClick={() => {
               setSelectedFile(null);
@@ -349,8 +374,9 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
         </div>
       )}
       <div
-        className={`p-4 flex items-center space-x-3 ${theme === "dark" ? "bg-[#303430]" : "bg-white"
-          } relative`}
+        className={`p-4 flex items-center space-x-3 ${
+          theme === "dark" ? "bg-[#303430]" : "bg-white"
+        } relative`}
       >
         {/* Emoji button */}
         <button
@@ -358,17 +384,15 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
           onClick={() => setshowEmojiPicker(!showEmojiPicker)}
         >
           <FaSmile
-            className={`h-6 w-6 ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
+            className={`h-6 w-6 ${
+              theme === "dark" ? "text-gray-400" : "text-gray-500"
+            }`}
           />
         </button>
 
         {/* Emoji Picker */}
         {showEmojiPicker && (
-          <div
-            ref={emojiPickerRef}
-            className="absolute left-0 bottom-16 z-50"
-          >
+          <div ref={emojiPickerRef} className="absolute left-0 bottom-16 z-50">
             <EmojiPicker
               onEmojiClick={(emojiObject) => {
                 setMessage((prev) => prev + emojiObject.emoji);
@@ -386,34 +410,47 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
             onClick={() => setShowFileMenu(!showFileMenu)}
           >
             <FaPaperclip
-              className={`h-6 w-6 ${theme === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
+              className={`h-6 w-6 ${
+                theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
             />
           </button>
 
           {showFileMenu && (
             <div
-              className={`absolute bottom-12 left-0 ${theme === "dark" ? "bg-gray-700" : "bg-gray-300"
-                } rounded-lg shadow-lg flex flex-col`}
+              className={`absolute bottom-12 left-0 ${
+                theme === "dark" ? "bg-gray-700" : "bg-gray-300"
+              } rounded-lg shadow-lg flex flex-col`}
             >
-              <button
-                className={`px-4 py-2 w-full text-left flex items-center transition-colors ${theme === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-black"
-                  }`}
+              <label
+                className={`px-4 py-2 w-full text-left flex items-center cursor-pointer transition-colors ${
+                  theme === "dark"
+                    ? "bg-gray-700 hover:bg-gray-600 text-white"
+                    : "bg-gray-100 hover:bg-gray-200 text-black"
+                }`}
               >
                 <FaImage className="mr-2" /> Image / Video
-              </button>
-
-              <button
-                className={`px-4 py-2 w-full text-left flex items-center transition-colors ${theme === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600 text-white"
-                  : "bg-gray-100 hover:bg-gray-200 text-black"
-                  }`}
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </label>
+               
+                <label
+                className={`px-4 py-2 w-full text-left flex items-center cursor-pointer transition-colors ${
+                  theme === "dark"
+                    ? "bg-gray-700 hover:bg-gray-600 text-white"
+                    : "bg-gray-100 hover:bg-gray-200 text-black"
+                }`}
               >
                 <FaFile className="mr-2" /> Documents
-              </button>
-
+                 <input
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </label>
             </div>
           )}
         </div>
@@ -429,10 +466,11 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
             }
           }}
           placeholder="Type a message"
-          className={`flex-grow px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 ${theme === "dark"
-            ? "bg-gray-700 text-white border-gray-600"
-            : "bg-white text-black border-gray-300"
-            }`}
+          className={`flex-grow px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 ${
+            theme === "dark"
+              ? "bg-gray-700 text-white border-gray-600"
+              : "bg-white text-black border-gray-300"
+          }`}
         />
 
         {/* Send button */}
@@ -443,8 +481,9 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
           <FaPaperPlane className="h-5 w-5 text-white" />
         </button>
       </div>
-
     </div>
+    <VideoCallManger  socket={socket}/>
+  </>
   );
 }
 

@@ -34,7 +34,6 @@ export const useChatStore = create((set, get) => ({
 
     // Incoming message from other user
     socket.on("receive_message", (message) => {
-      console.log(message);
       get().receiveMessage(message);
     });
 
@@ -176,7 +175,6 @@ export const useChatStore = create((set, get) => ({
         `/chat/conversation/${conversationId}/messages`
       );
       const messageArray = data.data || data || [];
-      console.log(data);
 
       set({
         messages: messageArray,
@@ -204,7 +202,6 @@ export const useChatStore = create((set, get) => ({
     const media = formData.get("media");
     const content = formData.get("content");
     const messageStatus = formData.get("messageStatus");
-    console.log(sender, receiver, media, content, messageStatus);
     const socket = getSocket();
     const { conversations } = get();
 
@@ -367,7 +364,6 @@ export const useChatStore = create((set, get) => ({
 
 
   deletedMessage: async ({ messageId }) => {
-    console.log(messageId);
     try {
       const data = await axiosInstance.delete(`/chat/message/${messageId}`);
       set((state) => ({
@@ -395,10 +391,9 @@ export const useChatStore = create((set, get) => ({
         emoji,
         reactionUserId,
       });
-      console.log(messageId, emoji, reactionUserId); // ✅ now works
     }
   },
-
+ 
   startTyping: (receiverId) => {
     const { currentConversation } = get();
     const socket = getSocket();
