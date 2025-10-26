@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import User from "../models/user.model.js";
 import Message from "../models/messages.model.js";
+import handleVideoCallEvent from "./video-call-services.js";
 
 
 //Map to store online users ->userId,socketId 
@@ -28,6 +29,7 @@ const initializeSocket = (server) => {
       socket.on("user_connected", async (connectingUserId) => {
          try {
             userId = connectingUserId;
+            socket.userId=userId;
             onlineUsers.set(userId, socket.id);  // Map {
             //   "101" => "abc123",
             //   "102" => "xyz456",
@@ -218,8 +220,12 @@ const initializeSocket = (server) => {
          } catch (error) {
             console.log("Error handling reaction", error);
          }
+
+
       });
 
+      //handle video call
+      handleVideoCallEvent(socket,io,onlineUsers); 
 
       //handle disconnection and mark user offline
       const handleDisconnected = async () => {
@@ -255,7 +261,7 @@ const initializeSocket = (server) => {
 
    })
 
-   // attach the online user map to the scoket server for external user
+   // attach the online user map to the socket server for external user
    io.socketUserMap = onlineUsers;
    return io;  //If you create a separate socket setup function, you might return io so the main server (or other modules) can use it later.
 }

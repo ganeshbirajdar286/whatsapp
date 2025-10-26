@@ -40,4 +40,4 @@ export const verifyOtp=async(phoneNumber,otp)=>{
         return(error.message)
     } 
 }
- 
+   
