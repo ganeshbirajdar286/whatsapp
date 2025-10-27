@@ -92,6 +92,7 @@ const VideoCallManger = ({ socket }) => {
         callerId: user?._id,
         receiverId,
         callType,
+        callId, // IMPORTANT: Send the callId to backend
         callerInfo: {
           username: user.username,
           profilePicture: user?.profilePicture,
