@@ -1,17 +1,18 @@
 const handleVideoCallEvent = (socket, io, onlineUsers) => {
-  // Initiate call
-  socket.on("initiate_call", ({ callerId, receiverId, callType, callerInfo }) => {
+  // Initiate call - FIXED: Use callId from frontend
+  socket.on("initiate_call", ({ callerId, receiverId, callType, callerInfo, callId }) => {
+    console.log(`📞 Call initiate received:`, { callerId, receiverId, callId });
+    
     const receiverSocketId = onlineUsers.get(receiverId);
     if (receiverSocketId) {
-      const callId = `${callerId}-${receiverId}-${Date.now()}`;
       io.to(receiverSocketId).emit("incoming_call", {
         callerId,
         callerName: callerInfo.username,
         callerAvatar: callerInfo.profilePicture,
-        callId,
+        callId, // Use the callId from frontend
         callType,
       });
-      console.log(`📞 Call initiated from ${callerId} to ${receiverId}`);
+      console.log(`✅ Call ${callId} forwarded to ${receiverId}`);
     } else {
       console.log(`❌ Receiver ${receiverId} is offline`);
       socket.emit("call_failed", { reason: "user is offline" });
