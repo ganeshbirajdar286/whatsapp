@@ -112,7 +112,7 @@ function MessageBubble({
 
           <div
             className={`absolute ${isUserMessage ? "-left-10" : "-right-10"
-              } top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2`}
+              }  top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2`}
           >
             <button
               onClick={() => setShowReaction(!showReaction)}
@@ -132,7 +132,7 @@ function MessageBubble({
             <div
               ref={reactionMenuRef}
               className={`absolute -top-8 ${isUserMessage ? "-left-30" : "left-56"
-                } transform -translate-x-1/2 flex items-center  bg-[#202c33]/90 rounded-full px-2 py-1.5 gap-1 shadow-lg `}
+                }   transform -translate-x-1/2 flex items-center  bg-[#202c33]/90 rounded-full px-2 py-1.5 gap-1 shadow-lg `}
             >
               {quickReactions.map((emoji, index) => (
                 <button
