@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import Layout from './Layout.JSX'
+import Layout from './layout.jsx'
 import {motion} from "framer-motion"
 import  ChatList from "../pages/chatSection/ChatList"
 import { getAllUsers } from '../pages/services/user.services'
