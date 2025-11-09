@@ -18,7 +18,6 @@ credentials:true,
 }
 
 app.use(cors(corsOption))
-app.options("*", cors(corsOption));
 const port=process.env.PORT;
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
