@@ -5,7 +5,6 @@ import  cors from "cors"
 import cookieParser from "cookie-parser"
 import authRouter from "../backend/router/auth.router.js"
 import chatRouter from "../backend/router/chat.router.js"
-import statusRouter  from  "../backend/router/status.router.js"
 import initializeSocket from "./services/socket.services.js"
 import http from "http"
 
@@ -38,7 +37,6 @@ app.use((req,res,next)=>{
 
 app.use("/api/auth",authRouter);
 app.use("/api/chat",chatRouter);
-app.use("/api/status",statusRouter); 
 
 
 server.listen(port,(req,res)=>{ 
