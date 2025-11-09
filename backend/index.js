@@ -11,10 +11,35 @@ import http from "http"
 
 dotenv.config()
 const app =express();
-const corsOption ={
-origin:process.env.FRONTEND_URL,
-credentials:true,
-}
+const normalizeOrigin = (url = "") => url.replace(/\/$/, "");
+
+const allowedOrigins = [
+  normalizeOrigin(process.env.FRONTEND_URL),
+  "https://whatsapp-mufd.vercel.app"
+];
+
+const corsOption = {
+  credentials: true,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+
+    const cleanOrigin = normalizeOrigin(origin);
+
+    if (allowedOrigins.includes(cleanOrigin)) {
+      return callback(null, true);
+    }
+
+    if (/\.vercel\.app$/.test(cleanOrigin)) {
+      return callback(null, true);
+    }
+
+    console.log("Blocked by CORS:", cleanOrigin);
+    callback(new Error("Not allowed by CORS"), false);
+  }
+};
+
+app.use(cors(corsOption));
+
 
 app.use(cors(corsOption))
 const port=process.env.PORT;
