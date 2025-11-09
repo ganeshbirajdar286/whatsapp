@@ -83,6 +83,7 @@ export const verifyotp = async (req, res) => {
       await user.save();
     }
     const token = jwtToken(user?._id);
+    console.log(token);
     res.cookie("token", token, {
       maxAge: 1000 * 60 * 60 * 24 * 365,
       httpOnly: true,

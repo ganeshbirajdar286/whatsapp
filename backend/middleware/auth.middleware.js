@@ -3,6 +3,7 @@ import response from "../utils/responseHandle.js";
 
 export const isLogined =async(req,res,next)=>{
       const authToken =req.cookies.token;
+      console.log(authToken);
       if(!authToken){
         return response(res,401,"authorization token missing");
       }
@@ -10,7 +11,7 @@ export const isLogined =async(req,res,next)=>{
           const decoded = jwt.verify(authToken, process.env.JWT_SECRET);
            req.user = decoded
            next();
-      } catch (error) {
+      } catch (error) { 
         console.log(error);
         return response(res,404,"token expired")
       } 
