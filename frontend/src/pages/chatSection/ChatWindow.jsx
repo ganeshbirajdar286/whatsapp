@@ -16,9 +16,9 @@ import {
 } from "react-icons/fa";
 import whatsappImage from "../../assets/whatsappImage.png";
 import { isToday, isYesterday, format } from "date-fns";
-import MessageBubble from "./MessageBubble";
+import MessageBubble from "./MessageBubble.jsx";
 import EmojiPicker from "emoji-picker-react";
-import VideoCallManger from "../videoCall/videoCallManger";
+import VideoCallManger from "../videoCall/videoCallManger.jsx";
 import { getSocket } from "../services/chat.services";
 import useVedioCallStore from "../../store/videoCallStore";
 
