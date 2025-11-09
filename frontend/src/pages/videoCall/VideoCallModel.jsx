@@ -42,8 +42,6 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   const {
     setCurrentCall,          // Store call info (callId, participantId, etc.)
-    setincomingCall,         // Store incoming call info
-    setCallType,             // 'video' or 'audio'
     setCallModelOpen,        // Show/hide call modal
     endCall,                 // Reset all call states
     setCallStatus,           // 'idle', 'calling', 'ringing', 'connecting', 'connected'

@@ -27,8 +27,6 @@ function SideBar() {
   useEffect(() => {
     if (location.pathname === "/") {
       setActiveTab("chats");
-    } else if (location.pathname === "/status") {
-      setActiveTab("status");
     } else if (location.pathname === "/user-profile") {
       setActiveTab("profile");
     } else if (location.pathname === "/setting") {
@@ -61,24 +59,7 @@ function SideBar() {
         />
       </Link>
 
-      <Link
-        to="/status"
-        className={`${isMobile ? "" : "mb-8"}  ${
-          activeTab === "status" && "bg-gray-300 shadow-sm  p-2  rounded-full "
-        } focus:outline-none`}
-      >
-        <MdRadioButtonChecked
-          className={`h-6 w-6 ${
-            activeTab === "status"
-              ? theme === "dark"
-                ? "text-gray-800 "
-                : " "
-              : theme === "dark"
-              ? "text-gray-300"
-              : "text-gray-800"
-          }`}
-        />
-      </Link>
+    
       {!isMobile && <div className="flex-grow"></div>}
       <Link
         to="/user-profile"

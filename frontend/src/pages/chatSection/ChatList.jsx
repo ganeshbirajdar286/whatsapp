@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import useLayoutStore from "../../store/layoutStore";
 import useThemeStore from "../../store/themeStore";
 import useUserStore from "../../store/useUserStore";
@@ -34,6 +34,16 @@ function ChatList({ contacts }) {
   const filterContacts = contactsWithConversations.filter((contact) =>
     contact.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+  const handleClose = () => {
+    console.log("Tab closing... cleaning storage");
+    localStorage.removeItem("layout-storage");
+  };
+
+  window.addEventListener("beforeunload", handleClose);
+  return () => window.removeEventListener("beforeunload", handleClose);
+}, []);
 
   return (
     <div
