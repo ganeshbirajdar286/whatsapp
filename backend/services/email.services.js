@@ -14,9 +14,13 @@ const transporter=nodemailer.createTransport({
 })
 
 transporter.verify((err, success) => {
-  if (err) console.log("SMTP Error:", err);
-  else console.log("SMTP Connected Successfully!");
+  if (err) {
+    console.log("SMTP Verify Error:", err);
+  } else {
+    console.log("SMTP Connected Successfully!");
+  }
 });
+
 
  export const sendOtptoEmail=async(email,otp)=>{
     const html = `
