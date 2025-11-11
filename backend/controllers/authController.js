@@ -14,31 +14,41 @@ export const sendOtp = async (req, res) => {
   const otp = otpGenerator();
   const expiry = new Date(Date.now() + 5 * 60 * 1000);
   let user;
+
   try {
+    // EMAIL OTP FLOW
     if (email) {
       user = await User.findOne({ email });
+
       if (!user) {
         user = new User({ email });
       }
       user.emailOtp = otp;
       user.emailOtpExpiry = expiry;
-      await sendOtptoEmail(email, otp);
+      // Send via Brevo API (NOT SMTP)
+      try {
+        await sendOtptoEmail(email, otp);
+      } catch (error) {
+        console.log("Brevo Email Error:", error);
+        return response(res, 500, "Failed to send OTP email");
+      }
       await user.save();
       return response(res, 200, "Otp send to email", { email });
     }
+    // PHONE OTP FLOW
     if (!phoneNumber || !phoneSuffix) {
       return response(res, 400, "phoneNumber and phoneSuffix required");
     }
     const fullPhoneNumber = `${phoneSuffix}${phoneNumber}`;
     user = await User.findOne({ phoneNumber });
     if (!user) {
-      user = await new User({ phoneNumber, phoneSuffix });
+      user = new User({ phoneNumber, phoneSuffix });
     }
     await senOtpToPhoneNumber(fullPhoneNumber);
     await user.save();
     return response(res, 200, "Otp send succesfully!!", user);
   } catch (error) {
-    console.log(error);
+    console.log("Send OTP Error:", error);
     return response(res, 500, "Internal server error");
   }
 };

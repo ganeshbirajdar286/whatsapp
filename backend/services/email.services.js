@@ -1,29 +1,18 @@
-import nodemailer from "nodemailer"
-import dotenv from "dotenv"
-dotenv.config()
 
-const transporter=nodemailer.createTransport({
-      host: process.env.BREVO_HOST,
-    port: Number(process.env.BREVO_PORT),
-   auth: {
-    user: process.env.BREVO_USER,
-    pass: process.env.BREVO_PASS,
-  },
-     secure: false,            // important
-  requireTLS: true,
-})
+import axios from "axios";
 
-transporter.verify((err, success) => {
-  if (err) {
-    console.log("SMTP Verify Error:", err);
-  } else {
-    console.log("SMTP Connected Successfully!");
-  }
-});
-
-
- export const sendOtptoEmail=async(email,otp)=>{
-    const html = `
+export const sendOtptoEmail = async (email, otp) => {
+  try {
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: "WhatsApp Web",
+          email: process.env.BREVO_VERIFIED_SENDER
+        },
+        to: [{ email }],
+        subject: "Your OTP for WhatsApp Web",
+        htmlContent: `
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
       <h2 style="color: #075e54;">🔐 WhatsApp Web Verification</h2>
       
@@ -45,15 +34,19 @@ transporter.verify((err, success) => {
 
       <small style="color: #777;">This is an automated message. Please do not reply.</small>
     </div>
-  `;
+  `
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json"
+        }
+      }
+    );
 
-
-  const info = await transporter.sendMail({
-  from: `"WhatsApp Web" <${process.env.VERIFIED_SENDER}>`,
-  to: email, 
-  subject: "Your OTP", 
-  html,
-});
-
-
-}  
+    return response.data;
+  } catch (err) {
+    console.log("Brevo API Error:", err.response?.data || err.message);
+    throw new Error("Failed to send email OTP");
+  }
+};
