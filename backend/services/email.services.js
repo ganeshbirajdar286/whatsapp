@@ -30,7 +30,7 @@ export const sendOtptoEmail = async (email, otp) => {
 
   try {
     const response = await resend.emails.send({
-      from: process.env.EMAIL_USER,
+     from: "WhatsApp Web <onboarding@resend.dev>",
       to: email,
       subject: "Your WhatsApp Verification Code",
       html,
