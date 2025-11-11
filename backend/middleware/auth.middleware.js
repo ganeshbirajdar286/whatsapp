@@ -3,7 +3,6 @@ import response from "../utils/responseHandle.js";
 
 export const isLogined =async(req,res,next)=>{
       const authToken =req.cookies.token;
-      console.log(authToken);
       if(!authToken){
         return response(res,401,"authorization token missing");
       }

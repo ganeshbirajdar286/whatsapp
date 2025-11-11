@@ -1,10 +1,25 @@
-import { Resend } from "resend";
-import dotenv from "dotenv" 
+import nodemailer from "nodemailer"
+import dotenv from "dotenv"
 dotenv.config()
-const resend = new Resend(process.env.RESEND_API_KEY);
 
-export const sendOtptoEmail = async (email, otp) => {
-  const html = `
+const transporter=nodemailer.createTransport({
+      host: process.env.BREVO_HOST,
+    port: Number(process.env.BREVO_PORT),
+   auth: {
+    user: process.env.BREVO_USER,
+    pass: process.env.BREVO_PASS,
+  },
+     secure: false,            // important
+  requireTLS: true,
+})
+
+transporter.verify((err, success) => {
+  if (err) console.log("SMTP Error:", err);
+  else console.log("SMTP Connected Successfully!");
+});
+
+ export const sendOtptoEmail=async(email,otp)=>{
+    const html = `
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
       <h2 style="color: #075e54;">🔐 WhatsApp Web Verification</h2>
       
@@ -28,16 +43,13 @@ export const sendOtptoEmail = async (email, otp) => {
     </div>
   `;
 
-  try {
-    const response = await resend.emails.send({
-     from: "WhatsApp Web <onboarding@resend.dev>",
-      to: email,
-      subject: "Your WhatsApp Verification Code",
-      html,
-    });
 
-    console.log("Email sent:", response);
-  } catch (error) {
-    console.error("Resend Error:", error);
-  }
-};
+  const info = await transporter.sendMail({
+  from: `"WhatsApp Web" <${process.env.VERIFIED_SENDER}>`,
+  to: email, 
+  subject: "Your OTP", 
+  html,
+});
+
+
+}  
