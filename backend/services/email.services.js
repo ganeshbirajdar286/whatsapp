@@ -1,28 +1,8 @@
-import nodemailer from "nodemailer"
-import dotenv from "dotenv"
-dotenv.config()
+import { Resend } from "resend";
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-const transporter=nodemailer.createTransport({
-    host:'smtp.gmail.com',
-    port:587,
-    auth:{
-        user:process.env.EMAIL_USER,
-        pass:process.env.EMAIL_PASS,
-    },
-     secure: false,            // important
-  requireTLS: true,
-})
-
-transporter.verify((error, success) => {
-    if (error) {
-        console.log("SMTP Error:", error);
-    } else {
-        console.log("Server ready to send messages");
-    }
-});
-
- export const sendOtptoEmail=async(email,otp)=>{
-    const html = `
+export const sendOtptoEmail = async (email, otp) => {
+  const html = `
     <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
       <h2 style="color: #075e54;">🔐 WhatsApp Web Verification</h2>
       
@@ -46,11 +26,16 @@ transporter.verify((error, success) => {
     </div>
   `;
 
+  try {
+    const response = await resend.emails.send({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Your WhatsApp Verification Code",
+      html,
+    });
 
-  await transporter.sendMail({
-    from:`"whatsapp web",<${process.env.EMAIL_USER}>`,
-    to:email,
-    subject:"tour Whatapp Verification  Code",
-    html,
-  }) 
-} 
+    console.log("Email sent:", response);
+  } catch (error) {
+    console.error("Resend Error:", error);
+  }
+};
