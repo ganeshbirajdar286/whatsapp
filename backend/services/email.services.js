@@ -13,13 +13,13 @@ const transporter=nodemailer.createTransport({
   requireTLS: true,
 })
 
-transporter.verify((error,success)=>{ 
-    if(success){
-        console.log("succesfully send mail");
-    }else{
-        console.log("error in sending mail");
+transporter.verify((error, success) => {
+    if (error) {
+        console.log("SMTP Error:", error);
+    } else {
+        console.log("Server ready to send messages");
     }
-})    
+});
 
  export const sendOtptoEmail=async(email,otp)=>{
     const html = `
