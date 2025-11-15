@@ -14,7 +14,10 @@ const typingUser = new Map();
 const initializeSocket = (server) => {
    const io = new Server(server, {
       cors: {
-         origin: process.env.FORNTEND_URL,
+         origin: [
+      process.env.FORNTEND_URL,  // your main domain (optional)
+      /\.vercel\.app$/,          // allow ALL Vercel preview + production URLs
+    ],
          credentials: true,
          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
       },
