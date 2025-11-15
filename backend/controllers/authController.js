@@ -14,7 +14,6 @@ export const sendOtp = async (req, res) => {
   const otp = otpGenerator();
   const expiry = new Date(Date.now() + 5 * 60 * 1000);
   let user;
-
   try {
     // EMAIL OTP FLOW
     if (email) {
@@ -93,14 +92,13 @@ export const verifyotp = async (req, res) => {
       await user.save();
     }
     const token = jwtToken(user?._id);
-    console.log(token);
     res.cookie("token", token, {
       maxAge: 1000 * 60 * 60 * 24 * 365,
       httpOnly: true,
       sameSite: "none",
       secure: true,
     });
-    return response(res, 200, "otp verify successfully", user);
+    return response(res, 200, "otp verify successfully", {user,localToken:token} );
   } catch (error) {
     console.log(error);
     return response(res, 500, "Internal server error");

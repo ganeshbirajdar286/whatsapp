@@ -6,7 +6,7 @@ const router=express.Router();
 
 
 router.post("/send-otp",sendOtp);
-router.post("/verify-otp",verifyotp);
+router.post("/verify-otp",verifyotp); 
 router.put("/update-profile",isLogined,multerMiddleWare,updateProfile);
 router.get("/logout",isLogined,logout)
 router.get("/check-auth",isLogined,checkAuthenticated);

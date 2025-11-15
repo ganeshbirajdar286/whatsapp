@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import User from "../models/user.model.js";
 import Message from "../models/messages.model.js";
 import handleVideoCallEvent from "./video-call-services.js";
+import { socketMiddleware } from "../middleware/socket.middleware.js";
 
 
 //Map to store online users ->userId,socketId 
@@ -19,6 +20,9 @@ const initializeSocket = (server) => {
       },
       pingTimeout: 60000,// disconnect inactiveusers or sockets after 60s
    })
+   // middleware
+  io.use(socketMiddleware);
+
 
    //when a new socket connection  is  established 
    io.on("connection", (socket) => {
