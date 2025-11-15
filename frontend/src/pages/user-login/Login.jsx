@@ -217,7 +217,7 @@ function Login() {
         }
       }
     } catch (error) {
-      console.log(error);
+      
       setError(error.message || "Failed to send OTP")
     } finally {
       setLoading(false);
@@ -239,6 +239,8 @@ function Login() {
       }
       if (response.status === "success") {
         toast.success("OTP verify successfully!!");
+        const token=response?.data?.localToken;
+        localStorage.setItem("auth_token",token);
         const user = response.data?.user;
         if (user?.username && user?.profilePicture) {
           setUser(user);

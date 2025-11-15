@@ -74,8 +74,6 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // WEBRTC CONFIGURATION - STUN servers for NAT traversal
   // ============================================================================
-  // STUN servers help discover public IP addresses when behind NAT/firewall
-  // This allows peer-to-peer connections between different networks
   const rtcConfiguration = {
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
@@ -94,8 +92,6 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // DISPLAY INFO - Determine which user's info to show in UI
   // ============================================================================
-  // For incoming calls: show caller's info
-  // For active calls: show participant's info
   const displayInfo = useMemo(() => {
     if (incomingCall && !isCallActive) {
       return {
@@ -114,8 +110,6 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // CONNECTION DETECTION - Update UI when connection is established
   // ============================================================================
-  // Triggers when both peer connection AND remote stream are available
-  // This means the WebRTC connection is fully established and media is flowing
   useEffect(() => {
     if (peerConnection && remoteStream) {
       console.log("✅ Both peer connection and remote stream available");
@@ -123,9 +117,9 @@ function VideoCallModel({ socket }) {
         id: remoteStream.id,
         active: remoteStream.active,
         tracks: remoteStream.getTracks().map(t => ({
-          kind: t.kind,           // 'audio' or 'video'
-          enabled: t.enabled,     // Is track active
-          readyState: t.readyState, // 'live' or 'ended'
+          kind: t.kind,
+          enabled: t.enabled,
+          readyState: t.readyState,
           id: t.id.slice(0, 8)
         }))
       });
@@ -137,13 +131,10 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // LOCAL VIDEO SETUP - Attach user's camera stream to video element
   // ============================================================================
-  // When localStream changes (camera/mic access granted), attach it to video element
-  // srcObject is used for live streams (not src which is for files/URLs)
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       console.log("🎥 Setting local video srcObject");
       localVideoRef.current.srcObject = localStream;
-      // Force play in case autoplay is blocked
       localVideoRef.current.play().catch(err => {
         console.error("Error playing local video:", err);
       });
@@ -153,7 +144,6 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // REMOTE VIDEO SETUP - Attach other user's stream to video element
   // ============================================================================
-  // When remoteStream is received via WebRTC, display it in the video element
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
       console.log("🎥 Setting remote video srcObject", {
@@ -162,7 +152,6 @@ function VideoCallModel({ socket }) {
         audio: remoteStream.getAudioTracks().length
       });
       remoteVideoRef.current.srcObject = remoteStream;
-      // Force play
       remoteVideoRef.current.play().catch(err => {
         console.error("Error playing remote video:", err);
       });
@@ -172,19 +161,15 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // [COMMON] INITIALIZE MEDIA - Get camera and microphone access
   // ============================================================================
-  // Used by BOTH caller and receiver to access their camera/microphone
-  // @param video: boolean - true for video calls, false for audio-only
-  // @returns MediaStream object containing audio/video tracks
   const initializeMedia = async (video = true) => {
     try {
-      // Request permission to access camera and microphone
       const stream = await navigator.mediaDevices.getUserMedia({
         video: video ? { width: 640, height: 480 } : false,
         audio: true,
       });
       console.log("✅ Local media stream acquired:", stream.getTracks());
       setLocalStream(stream);
-      return stream; // CRITICAL: Return stream so caller can use it
+      return stream;
     } catch (error) {
       console.error("❌ Error accessing media devices:", error);
       throw error;
@@ -194,11 +179,6 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // [COMMON] CREATE PEER CONNECTION - Setup WebRTC connection
   // ============================================================================
-  // Creates RTCPeerConnection and sets up all event handlers
-  // Used by BOTH caller and receiver
-  // @param stream: MediaStream - User's camera/mic stream
-  // @param role: string - 'CALLER' or 'RECEIVER' (for logging)
-  // @returns RTCPeerConnection object
   const createPeerConnection = (stream, role) => {
     console.log(`🔧 Creating peer connection for ${role}`);
     
@@ -207,14 +187,8 @@ function VideoCallModel({ socket }) {
       throw new Error("Stream is required");
     }
 
-    // Create new WebRTC peer connection with STUN servers
     const pc = new RTCPeerConnection(rtcConfiguration);
 
-    // -------------------------------------------------------------------------
-    // ADD LOCAL TRACKS - Send user's audio/video to peer
-    // -------------------------------------------------------------------------
-    // Each track (audio/video) is added to the peer connection
-    // This allows the remote peer to receive this media
     stream.getTracks().forEach((track) => {
       console.log(`📤 ${role} adding ${track.kind} track (${track.id.slice(0, 8)}...)`);
       const sender = pc.addTrack(track, stream);
@@ -223,12 +197,6 @@ function VideoCallModel({ socket }) {
 
     console.log(`📊 ${role} total senders:`, pc.getSenders().length);
 
-    // -------------------------------------------------------------------------
-    // ICE CANDIDATE HANDLER - Exchange network information
-    // -------------------------------------------------------------------------
-    // ICE candidates contain network information (IP addresses, ports)
-    // needed to establish peer-to-peer connection
-    // When browser finds a way to connect, this event fires
     pc.onicecandidate = (event) => {
       if (event.candidate && socket) {
         const participantId = currentCall?.participantId || incomingCall?.callerId;
@@ -236,7 +204,6 @@ function VideoCallModel({ socket }) {
         
         if (participantId && callId) {
           console.log(`🧊 ${role} sending ICE candidate`);
-          // Send ICE candidate to other peer via signaling server
           socket.emit("webrtc_ice_candidate", {
             candidate: event.candidate,
             receiverId: participantId,
@@ -246,11 +213,6 @@ function VideoCallModel({ socket }) {
       }
     };
 
-    // -------------------------------------------------------------------------
-    // REMOTE TRACK HANDLER - Receive audio/video from peer
-    // -------------------------------------------------------------------------
-    // When remote peer adds their tracks, this event fires
-    // We collect all tracks into a single MediaStream
     const remoteStreamInstance = new MediaStream();
     
     pc.ontrack = (event) => {
@@ -262,21 +224,13 @@ function VideoCallModel({ socket }) {
         muted: event.track.muted
       });
       
-      // Add track to our remote stream (avoid duplicates)
       if (!remoteStreamInstance.getTracks().find(t => t.id === event.track.id)) {
         remoteStreamInstance.addTrack(event.track);
         console.log(`✅ Track added to remote stream. Total tracks: ${remoteStreamInstance.getTracks().length}`);
-        
-        // Update state with the accumulated stream
         setRemoteStream(remoteStreamInstance);
       }
     };
 
-    // -------------------------------------------------------------------------
-    // CONNECTION STATE MONITORING
-    // -------------------------------------------------------------------------
-    // Tracks overall peer connection state
-    // States: new → connecting → connected → disconnected/failed/closed
     pc.onconnectionstatechange = () => {
       console.log(`🔌 ${role} connection state:`, pc.connectionState);
       
@@ -293,11 +247,6 @@ function VideoCallModel({ socket }) {
       }
     };
 
-    // -------------------------------------------------------------------------
-    // ICE CONNECTION STATE MONITORING
-    // -------------------------------------------------------------------------
-    // Tracks ICE connection state (network connectivity)
-    // States: new → checking → connected/completed → disconnected/failed/closed
     pc.oniceconnectionstatechange = () => {
       console.log(`🧊 ${role} ICE state:`, pc.iceConnectionState);
       if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
@@ -305,11 +254,6 @@ function VideoCallModel({ socket }) {
       }
     };
 
-    // -------------------------------------------------------------------------
-    // SIGNALING STATE MONITORING
-    // -------------------------------------------------------------------------
-    // Tracks the signaling state (offer/answer exchange)
-    // States: stable → have-local-offer → have-remote-offer → have-local-pranswer → stable
     pc.onsignalingstatechange = () => {
       console.log(`📡 ${role} signaling state:`, pc.signalingState);
     };
@@ -321,38 +265,29 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // [CALLER ONLY] INITIALIZE CALL - Create offer and send to receiver
   // ============================================================================
-  // Flow: Get media → Create peer connection → Create offer → Send offer
-  // This is called AFTER receiver accepts the call and signals they're ready
   const initializeCallerCall = async () => {
     try {
       console.log("📞 Initializing caller flow...");
       setCallStatus("connecting");
 
-      // Step 1: Get user's camera and microphone
       const stream = await initializeMedia(callType === "video");
       
       if (!stream) {
         throw new Error("Failed to get media stream");
       }
 
-      // Step 2: Create peer connection and add our tracks
       console.log("✅ Creating peer connection...");
       const pc = createPeerConnection(stream, "CALLER");
 
-      // Step 3: Create SDP offer
-      // SDP (Session Description Protocol) contains info about media, codecs, etc.
       console.log("✅ Creating offer...");
       const offer = await pc.createOffer({
         offerToReceiveAudio: true,
         offerToReceiveVideo: callType === "video",
       });
 
-      // Step 4: Set offer as local description
-      // This starts ICE candidate gathering
       await pc.setLocalDescription(offer);
       console.log("✅ Sending offer to receiver...");
 
-      // Step 5: Send offer to receiver via signaling server
       socket.emit("webrtc_offer", {
         offer,
         receiverId: currentCall?.participantId,
@@ -368,27 +303,21 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // [RECEIVER ONLY] ANSWER CALL - Accept incoming call
   // ============================================================================
-  // Flow: Get media → Create peer connection → Send ready signal
-  // Receiver creates peer connection FIRST, then waits for caller's offer
   const handleAnswerCall = async () => {
     try {
       console.log("📞 Answering call...");
       console.log("📋 Incoming call details:", incomingCall);
       setCallStatus("connecting");
 
-      // Step 1: Get user's camera and microphone
       const stream = await initializeMedia(callType === "video");
       
       if (!stream) {
         throw new Error("Failed to get media stream");
       }
 
-      // Step 2: Create peer connection and add our tracks
-      // IMPORTANT: Peer connection must be ready BEFORE receiving offer
       console.log("✅ Creating peer connection...");
       createPeerConnection(stream, "RECEIVER");
 
-      // Step 3: Notify caller that call is accepted
       console.log("✅ Accepting call...");
       const acceptData = {
         callerId: incomingCall?.callerId,
@@ -402,8 +331,6 @@ function VideoCallModel({ socket }) {
       console.log("📤 Emitting accept_call:", acceptData);
       socket.emit("accept_call", acceptData);
 
-      // Step 4: Signal that receiver is ready to receive offer
-      // This is CRITICAL - caller waits for this before sending offer
       const readyData = {
         callerId: incomingCall?.callerId,
         callId: incomingCall?.callId,
@@ -412,7 +339,6 @@ function VideoCallModel({ socket }) {
       console.log("📤 Emitting receiver_ready:", readyData);
       socket.emit("receiver_ready", readyData);
 
-      // Step 5: Update current call state
       setCurrentCall({
         callId: incomingCall?.callId,
         participantId: incomingCall?.callerId,
@@ -431,7 +357,6 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // [RECEIVER ONLY] REJECT CALL - Decline incoming call
   // ============================================================================
-  // Notifies caller that call was rejected and cleans up
   const handleRejectedCall = () => {
     if (incomingCall) {
       socket.emit("reject_call", {
@@ -440,7 +365,6 @@ function VideoCallModel({ socket }) {
       });
     }
 
-    // Clean up any media streams
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
       setLocalStream(null);
@@ -451,13 +375,11 @@ function VideoCallModel({ socket }) {
       setRemoteStream(null);
     }
 
-    // Close peer connection if exists
     if (peerConnection) {
       peerConnection.close();
       setPeerConnection(null);
     }
 
-    // Reset all call states
     endCall();
     clearIncomingCall();
     setCallModelOpen(false);
@@ -468,13 +390,10 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // [COMMON] END CALL - Terminate active call
   // ============================================================================
-  // Used by both caller and receiver to end an ongoing call
-  // Cleans up all media streams and peer connection
   const handleEndCall = () => {
     const participantId = currentCall?.participantId || incomingCall?.callerId;
     const callId = currentCall?.callId || incomingCall?.callId;
 
-    // Notify other peer that call is ending
     if (participantId && callId) {
       socket.emit("end_call", {
         callId: callId,
@@ -482,25 +401,21 @@ function VideoCallModel({ socket }) {
       });
     }
 
-    // Stop and release local media (camera/mic)
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
       setLocalStream(null);
     }
 
-    // Stop and release remote media
     if (remoteStream) {
       remoteStream.getTracks().forEach((track) => track.stop());
       setRemoteStream(null);
     }
 
-    // Close WebRTC peer connection
     if (peerConnection) {
       peerConnection.close();
       setPeerConnection(null);
     }
 
-    // Reset all call-related states
     endCall();
     clearIncomingCall();
     setCallModelOpen(false);
@@ -516,21 +431,10 @@ function VideoCallModel({ socket }) {
     
     console.log("🔌 Registering socket event listeners");
 
-    // -------------------------------------------------------------------------
-    // [CALLER] CALL ACCEPTED - Receiver picked up
-    // -------------------------------------------------------------------------
-    // Fired when receiver clicks accept button
-    // We don't initialize here - we wait for receiver_ready signal
     const handleCallAccepted = ({ receiverName }) => {
       console.log("✅ Call accepted by", receiverName);
-      // Don't initialize here - wait for receiver_ready
     };
 
-    // -------------------------------------------------------------------------
-    // [CALLER] RECEIVER READY - Receiver is ready to receive offer
-    // -------------------------------------------------------------------------
-    // This is the CRITICAL signal that tells caller to start WebRTC flow
-    // Receiver sends this AFTER creating their peer connection
     const handleReceiverReady = ({ callId }) => {
       console.log("✅✅✅ RECEIVER_READY EVENT RECEIVED ✅✅✅");
       console.log("📋 Received callId:", callId);
@@ -569,9 +473,6 @@ function VideoCallModel({ socket }) {
       }, 500);
     };
 
-    // -------------------------------------------------------------------------
-    // [CALLER] CALL REJECTED - Receiver declined
-    // -------------------------------------------------------------------------
     const handleCallRejected = () => {
       console.log("❌ Call rejected");
       setCallStatus("rejected");
@@ -582,9 +483,6 @@ function VideoCallModel({ socket }) {
       }, 1500);
     };
 
-    // -------------------------------------------------------------------------
-    // [COMMON] CALL ENDED - Other peer hung up
-    // -------------------------------------------------------------------------
     const handleCallEnded = () => {
       console.log("📞 Call ended by other user");
       
@@ -610,11 +508,6 @@ function VideoCallModel({ socket }) {
       setCallStatus(null);
     };
 
-    // -------------------------------------------------------------------------
-    // [RECEIVER] WEBRTC OFFER - Process caller's offer
-    // -------------------------------------------------------------------------
-    // Receiver gets the offer and creates an answer
-    // Flow: Set remote description → Create answer → Set local description → Send answer
     const handleWebRTCOffer = async ({ offer, senderId, callId }) => {
       console.log("📨 Received WebRTC offer");
       
@@ -624,18 +517,14 @@ function VideoCallModel({ socket }) {
       }
 
       try {
-        // Set caller's offer as remote description
         await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
         console.log("✅ Remote description set");
 
-        // Process any queued ICE candidates
         await processQueueIceCandidates();
 
-        // Create answer to the offer
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
-        // Send answer back to caller
         socket.emit("webrtc_answer", {
           answer,
           receiverId: senderId,
@@ -647,11 +536,6 @@ function VideoCallModel({ socket }) {
       }
     };
 
-    // -------------------------------------------------------------------------
-    // [CALLER] WEBRTC ANSWER - Process receiver's answer
-    // -------------------------------------------------------------------------
-    // Caller receives the answer from receiver
-    // Flow: Set remote description → Process ICE candidates
     const handleWebRTCAnswer = async ({ answer, senderId, callId }) => {
       console.log("📨 Received WebRTC answer");
       
@@ -666,26 +550,18 @@ function VideoCallModel({ socket }) {
       }
 
       try {
-        // Set receiver's answer as remote description
         await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
         console.log("✅ Remote description set from answer");
 
-        // Process any queued ICE candidates
         await processQueueIceCandidates();
       } catch (error) {
         console.error("❌ Answer handling error:", error);
       }
     };
 
-    // -------------------------------------------------------------------------
-    // [COMMON] WEBRTC ICE CANDIDATE - Exchange network information
-    // -------------------------------------------------------------------------
-    // Both peers exchange ICE candidates to find the best connection path
-    // ICE candidates are added AFTER remote description is set
     const handleWebRTCIceCandidates = async ({ candidate, senderId }) => {
       if (peerConnection && peerConnection.signalingState !== "closed") {
         if (peerConnection.remoteDescription) {
-          // Remote description is set, can add candidate immediately
           try {
             await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
             console.log("✅ ICE candidate added");
@@ -693,14 +569,12 @@ function VideoCallModel({ socket }) {
             console.error("❌ ICE candidate error:", error);
           }
         } else {
-          // Remote description not yet set, queue candidate
           console.log("⏳ Queuing ICE candidate");
           addIceCandidate(candidate);
         }
       }
     };
 
-    // Register all event listeners
     socket.on("call_accepted", handleCallAccepted);
     socket.on("receiver_ready", handleReceiverReady);
     socket.on("call_rejected", handleCallRejected);
@@ -709,18 +583,8 @@ function VideoCallModel({ socket }) {
     socket.on("webrtc_answer", handleWebRTCAnswer);
     socket.on("webrtc_ice_candidate", handleWebRTCIceCandidates);
     
-    // Verify registration
-    console.log("✅ All socket event listeners registered:", [
-      "call_accepted",
-      "receiver_ready", 
-      "call_rejected",
-      "call_ended",
-      "webrtc_offer",
-      "webrtc_answer",
-      "webrtc_ice_candidate"
-    ]);
+    console.log("✅ All socket event listeners registered");
 
-    // Cleanup: Unregister all listeners when component unmounts
     return () => {
       console.log("🔌 Unregistering socket event listeners");
       socket.off("call_accepted", handleCallAccepted);
@@ -737,19 +601,17 @@ function VideoCallModel({ socket }) {
   // RENDER LOGIC
   // ============================================================================
   
-  // Don't render if modal is closed and no incoming call
   if (!isCallModelOpen && !incomingCall) return null;
 
-  // Show active call UI when calling, connecting, or connected
   const shouldShowActiveCall =
     isCallActive || callStatus === "calling" || callStatus === "connecting";
 
   return (
-    <div className="  fixed inset-0 z-[999] flex items-center justify-center bg-black bg-opacity-75">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="relative w-full max-w-5xl aspect-video bg-gray-900/50 backdrop-blur-lg rounded-3xl shadow-2xl border border-gray-700 overflow-hidden"
+        className="relative w-full h-full sm:h-auto sm:max-w-5xl sm:aspect-video bg-gray-900/50 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-700 overflow-hidden"
       >
         {/* ===================================================================
             INCOMING CALL UI - Shown to receiver when call arrives
@@ -758,39 +620,39 @@ function VideoCallModel({ socket }) {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center h-full text-white"
+            className="flex flex-col items-center justify-center h-full text-white px-4"
           >
-            <div className="text-center mb-8">
-              <div className="w-32 h-32 rounded-full bg-gray-300 mx-auto mb-4 overflow-hidden">
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gray-300 mx-auto mb-3 sm:mb-4 overflow-hidden">
                 <img
                   src={displayInfo?.avatar}
                   alt={displayInfo?.name}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <h2 className="text-2xl font-semibold mb-2 text-white">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-2 text-white">
                 {displayInfo?.name}
               </h2>
-              <p className="text-lg text-gray-300">
+              <p className="text-base sm:text-lg text-gray-300">
                 Incoming {callType} call...
               </p>
             </div>
-            <div className="flex space-x-6">
+            <div className="flex space-x-4 sm:space-x-6">
               {/* Reject button */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleRejectedCall}
-                className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg"
+                className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg"
               >
-                <FaPhoneSlash className="w-6 h-6" />
+                <FaPhoneSlash className="w-5 h-5 sm:w-6 sm:h-6" />
               </motion.button>
               {/* Accept button */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleAnswerCall}
-                className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-lg"
+                className="w-14 h-14 sm:w-16 sm:h-16 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center shadow-lg"
               >
-                <FaVideo className="w-6 h-6" />
+                <FaVideo className="w-5 h-5 sm:w-6 sm:h-6" />
               </motion.button>
             </div>
           </motion.div>
@@ -805,12 +667,10 @@ function VideoCallModel({ socket }) {
             {/* ---------------------------------------------------------------
                 REMOTE VIDEO - Full screen display of other user
                 --------------------------------------------------------------- */}
-            {/* Always rendered but hidden when no stream
-                This prevents issues with late stream assignment */}
             <motion.video
               ref={remoteVideoRef}
-              autoPlay                    // Start playing automatically
-              playsInline                 // Prevent fullscreen on mobile
+              autoPlay
+              playsInline
               className={`w-full h-full object-cover bg-gray-800 ${
                 callType === "video" && remoteStream ? "block" : "hidden"
               }`}
@@ -824,10 +684,6 @@ function VideoCallModel({ socket }) {
             {/* ---------------------------------------------------------------
                 FALLBACK AVATAR - Shown when no video stream
                 --------------------------------------------------------------- */}
-            {/* Display avatar and status when:
-                - No remote stream yet (connecting)
-                - Audio-only call
-                - Video disabled */}
             {(!remoteStream || callType !== "video") && (
               <motion.div
                 className="w-full h-full bg-gray-900 flex items-center justify-center"
@@ -836,7 +692,7 @@ function VideoCallModel({ socket }) {
               >
                 <div className="text-center">
                   {/* Participant avatar */}
-                  <div className="w-32 h-32 rounded-full bg-gray-700 mx-auto mb-4 overflow-hidden">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gray-700 mx-auto mb-3 sm:mb-4 overflow-hidden">
                     <img
                       src={displayInfo?.avatar}
                       alt={displayInfo?.name}
@@ -844,7 +700,7 @@ function VideoCallModel({ socket }) {
                     />
                   </div>
                   {/* Status text based on call state */}
-                  <p className="text-white text-lg">
+                  <p className="text-white text-base sm:text-lg px-4">
                     {callStatus === "calling"
                       ? `Calling ${displayInfo?.name}...`
                       : callStatus === "connecting"
@@ -864,18 +720,17 @@ function VideoCallModel({ socket }) {
             {/* ---------------------------------------------------------------
                 LOCAL VIDEO (Picture-in-Picture) - User's own video
                 --------------------------------------------------------------- */}
-            {/* Small video in bottom-right corner showing user's camera */}
             <motion.video
               ref={localVideoRef}
-              autoPlay                    // Start playing automatically
-              muted                       // Mute own audio (prevent echo)
-              playsInline                 // Prevent fullscreen on mobile
+              autoPlay
+              muted
+              playsInline
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ 
                 opacity: localStream ? 1 : 0, 
                 scale: localStream ? 1 : 0.9 
               }}
-              className={`absolute bottom-6 right-6 w-44 h-32 rounded-xl border border-white/30 shadow-lg object-cover ${
+              className={`absolute bottom-20 sm:bottom-6 right-3 sm:right-6 w-28 h-20 sm:w-44 sm:h-32 rounded-lg sm:rounded-xl border border-white/30 shadow-lg object-cover ${
                 callType === "video" && localStream ? "block" : "hidden"
               }`}
               onLoadedMetadata={() => console.log("🎬 Local video loaded")}
@@ -885,47 +740,44 @@ function VideoCallModel({ socket }) {
             {/* ---------------------------------------------------------------
                 CALL STATUS INDICATOR - Top left badge
                 --------------------------------------------------------------- */}
-            {/* Shows current call status: calling, connecting, connected, etc. */}
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute top-4 left-4"
+              className="absolute top-3 sm:top-4 left-3 sm:left-4"
             >
-              <div className="px-4 py-2 rounded-full bg-gray-800/80 text-white shadow-md">
-                <p className="text-sm font-medium capitalize">{callStatus}</p>
+              <div className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gray-800/80 text-white shadow-md">
+                <p className="text-xs sm:text-sm font-medium capitalize">{callStatus}</p>
               </div>
             </motion.div>
 
             {/* ---------------------------------------------------------------
                 CALL CONTROLS - Bottom center buttons
                 --------------------------------------------------------------- */}
-            {/* Control panel with video, audio, and end call buttons */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-6 bg-black/50 backdrop-blur-lg px-6 py-4 rounded-full shadow-xl"
+              className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex gap-3 sm:gap-6 bg-black/50 backdrop-blur-lg px-4 py-3 sm:px-6 sm:py-4 rounded-full shadow-xl"
             >
               
               {/* ---------------------------------------------------------
                   VIDEO TOGGLE BUTTON - Enable/disable camera
                   --------------------------------------------------------- */}
-              {/* Only shown for video calls */}
               {callType === "video" && (
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={toggleVideo}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                  className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
                     isVideoEnabled
                       ? "bg-gray-600 hover:bg-gray-700 text-white"
                       : "bg-red-500 hover:bg-red-600 text-white"
                   }`}
                 >
                   {isVideoEnabled ? (
-                    <FaVideo className="w-5 h-5" />
+                    <FaVideo className="w-4 h-4 sm:w-5 sm:h-5" />
                   ) : (
-                    <FaVideoSlash className="w-5 h-5" />
+                    <FaVideoSlash className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                 </motion.button>
               )}
@@ -937,16 +789,16 @@ function VideoCallModel({ socket }) {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={toggleAudio}
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
                   isAudioEnabled
                     ? "bg-gray-600 hover:bg-gray-700 text-white"
                     : "bg-red-500 hover:bg-red-600 text-white"
                 }`}
               >
                 {isAudioEnabled ? (
-                  <FaMicrophone className="w-5 h-5" />
+                  <FaMicrophone className="w-4 h-4 sm:w-5 sm:h-5" />
                 ) : (
-                  <FaMicrophoneSlash className="w-5 h-5" />
+                  <FaMicrophoneSlash className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </motion.button>
 
@@ -957,9 +809,9 @@ function VideoCallModel({ socket }) {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={handleEndCall}
-                className="w-12 h-12 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white"
+                className="w-11 h-11 sm:w-12 sm:h-12 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white"
               >
-                <FaPhoneSlash className="w-5 h-5" />
+                <FaPhoneSlash className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
             </motion.div>
           </div>

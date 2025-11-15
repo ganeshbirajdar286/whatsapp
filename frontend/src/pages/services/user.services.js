@@ -2,7 +2,9 @@ import { axiosInstance } from "./url.services"
 
 export const sendOtp = async (phoneNumber, phoneSuffix, email) => {
     try {
+        console.log(phoneNumber,phoneSuffix,email);
         const response = await axiosInstance.post("/auth/send-otp", { phoneNumber, phoneSuffix, email });
+        console.log(response);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : error.message
