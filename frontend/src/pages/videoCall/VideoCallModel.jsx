@@ -74,20 +74,23 @@ function VideoCallModel({ socket }) {
   // ============================================================================
   // WEBRTC CONFIGURATION - STUN servers for NAT traversal
   // ============================================================================
-  const rtcConfiguration = {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:stun.l.google.com:5349" },
-      { urls: "stun:stun1.l.google.com:3478" },
-      { urls: "stun:stun1.l.google.com:5349" },
-      { urls: "stun:stun2.l.google.com:19302" },
-      { urls: "stun:stun2.l.google.com:5349" },
-      { urls: "stun:stun3.l.google.com:3478" },
-      { urls: "stun:stun3.l.google.com:5349" },
-      { urls: "stun:stun4.l.google.com:19302" },
-      { urls: "stun:stun4.l.google.com:5349" },
-    ],
-  };
+const rtcConfiguration = {
+  iceServers: [
+    // STUN servers
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:3478" },
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:3478" },
+    { urls: "stun:stun4.l.google.com:19302" },
+
+    // TURN server (ExpressTURN)
+    {
+      urls: "turn:relay1.expressturn.com:3480",
+      username: "000000002078659130",
+      credential: "0ZqynI1wyKtAUZKCFobI+m585P0="
+    }
+  ]
+};
 
   // ============================================================================
   // DISPLAY INFO - Determine which user's info to show in UI
