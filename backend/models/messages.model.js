@@ -27,6 +27,7 @@ const messageSchema=new Schema({
         },
         emoji:{
             type:String,
+               user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
         }
     }],
     messageStatus:{

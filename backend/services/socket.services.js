@@ -208,7 +208,7 @@ const initializeSocket = (server) => {
             const populatedMessage = await Message.findById(message._id)
                .populate("sender", "username profilePicture")
                .populate("receiver", "username profilePicture")
-               .populate("reactions.user", "username");
+               .populate("reactions.user", "username profilePicture")
 
             const reactionUpdated = {
                messageId,

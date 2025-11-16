@@ -116,6 +116,7 @@ export const getMessage = async (req, res) => {
         const messages = await Message.find({ conversation: conversationId })
             .populate("sender", "username profilePicture")
             .populate("receiver", "username profilePicture")
+           .populate("reactions.user", "username profilePicture")
             .sort({ createdAt: 1 });
 
         // mark messages as read in DB
