@@ -1,18 +1,33 @@
 import React, { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
-import { FaCheck, FaCheckDouble, FaSmile, FaPlus, FaRegCopy } from "react-icons/fa";
+import {
+  FaCheck,
+  FaCheckDouble,
+  FaSmile,
+  FaPlus,
+  FaRegCopy,
+} from "react-icons/fa";
 import { HiDotsVertical } from "react-icons/hi";
 import { MdDelete } from "react-icons/md";
 import { RxCross2 } from "react-icons/rx";
 import EmojiPicker from "emoji-picker-react";
 
-const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, deletedMessage }) => {
+
+
+const MessageBubble = ({
+  selectedContact,
+  message,
+  theme,
+  currentUser,
+  OnReact,
+  deletedMessage,
+}) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showReactionDetails, setShowReactionDetails] = useState(false);
   const [showOption, setShowOption] = useState(false);
   const [isHoveringBubble, setIsHoveringBubble] = useState(false);
-  
+
   const reactionPickerRef = useRef(null);
   const reactionDetailsRef = useRef(null);
   const optionRef = useRef(null);
@@ -20,10 +35,8 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
 
   const isOwnMessage = message.sender?._id === currentUser?._id;
 
-  // Common reaction emojis
   const quickReactions = ["👍", "❤️", "😂", "😮", "😢", "🙏"];
 
-  // Close pickers when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -41,7 +54,7 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
       if (
         optionRef.current &&
         !optionRef.current.contains(event.target) &&
-        !event.target.closest('[data-option-button]')
+        !event.target.closest("[data-option-button]")
       ) {
         setShowOption(false);
       }
@@ -57,7 +70,7 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Process reactions to group by emoji
+  // Group reactions
   const processReactions = () => {
     if (!message.reactions || message.reactions.length === 0) return [];
 
@@ -65,11 +78,7 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
     message.reactions.forEach((reaction) => {
       const emoji = reaction.emoji;
       if (!reactionMap[emoji]) {
-        reactionMap[emoji] = {
-          emoji,
-          count: 0,
-          users: [],
-        };
+        reactionMap[emoji] = { emoji, count: 0, users: [] };
       }
       reactionMap[emoji].count++;
       reactionMap[emoji].users.push(reaction.user);
@@ -93,13 +102,9 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
 
   const handleCopyMessage = () => {
     if (message.content) {
-      navigator.clipboard.writeText(message.content)
-        .then(() => {
-          alert("Message copied to clipboard!");
-        })
-        .catch(err => {
-          console.error("Failed to copy message:", err);
-        });
+      navigator.clipboard.writeText(message.content).then(() => {
+        alert("Message copied!");
+      });
     }
     setShowOption(false);
   };
@@ -109,17 +114,19 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
 
   return (
     <div
-      className={`flex mb-3 sm:mb-4 sm:right-3 ${isOwnMessage ? "justify-end " : "justify-start"} relative`}
+      className={`flex mb-3 relative ${
+        isOwnMessage ? "justify-end" : "justify-start pl-6"
+      }`}
     >
-      <div className={`max-w-[85%] xs:max-w-[80%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] xl:max-w-[60%] min-w-[120px] sm:min-w-[150px] ${isOwnMessage ? "order-2" : "order-1"} relative`}>
-        {/* Message Bubble Container */}
-        <div 
-          className="relative inline-block"
-          onMouseEnter={() => setIsHoveringBubble(true)}
-          onMouseLeave={() => setIsHoveringBubble(false)}
-        >
+      <div
+        className={`max-w-[85%] xs:max-w-[80%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] xl:max-w-[60%] min-w-[120px] ${
+          isOwnMessage ? "order-2" : "order-1"
+        } relative`}
+      >
+        {/* BUBBLE */}
+        <div className="relative inline-block group">
           <div
-            className={`rounded-lg px-3 py-2 sm:px-4 sm:py-2.5 shadow-md transition-all ${
+            className={`rounded-lg px-3 py-2 shadow-md ${
               isOwnMessage
                 ? theme === "dark"
                   ? "bg-[#005c4b] text-white"
@@ -127,37 +134,31 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
                 : theme === "dark"
                 ? "bg-[#202c33] text-white"
                 : "bg-white text-black"
-            } ${hasReactions ? "mb-5 sm:mb-6" : ""}`}
+            } ${hasReactions ? "mb-5" : ""}`}
           >
-            {/* Message Content */}
             {message.content && (
-              <p className="text-sm sm:text-base break-words whitespace-pre-wrap leading-relaxed mr-3">
+              <p className="text-sm break-words whitespace-pre-wrap mr-3">
                 {message.content}
               </p>
             )}
 
-            {/* Media Content */}
+            {/* MEDIA */}
             {message.media && (
               <div className="mt-2">
                 {message.mediaType?.startsWith("image/") ? (
-                  <img
-                    src={message.media}
-                    alt="Shared"
-                    className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => window.open(message.media, '_blank')}
-                  />
+                  <img src={message.media} className="rounded-lg max-w-full" />
                 ) : message.mediaType?.startsWith("video/") ? (
                   <video
                     src={message.media}
                     controls
-                    className="rounded-lg max-w-full h-auto"
+                    className="rounded-lg max-w-full"
                   />
                 ) : (
                   <a
                     href={message.media}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-500 underline text-sm hover:text-blue-600 transition-colors"
+                    className="text-blue-500 underline"
                   >
                     View File
                   </a>
@@ -165,23 +166,14 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
               </div>
             )}
 
-            {/* Time and Status */}
+            {/* TIME */}
             <div className="flex items-center justify-end gap-1 mt-1">
-              <span
-                className={`text-[10px] sm:text-xs ${
-                  isOwnMessage
-                    ? theme === "dark"
-                      ? "text-gray-300"
-                      : "text-gray-600"
-                    : theme === "dark"
-                    ? "text-gray-400"
-                    : "text-gray-500"
-                }`}
-              >
+              <span className="text-[10px] opacity-70">
                 {message.createdAt
                   ? format(new Date(message.createdAt), "HH:mm")
                   : ""}
               </span>
+
               {isOwnMessage && (
                 <>
                   {message.messageStatus === "sent" && (
@@ -197,242 +189,206 @@ const MessageBubble = ({selectedContact, message, theme, currentUser, OnReact, d
               )}
             </div>
 
-            {/* Three Dots Menu Button - Top Right Corner - Only shows when hovering bubble */}
-            <div 
-              className={`absolute top-1 right-1 transition-opacity duration-200 z-20 ${
-                isHoveringBubble ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}
+            {/* Three dots button (hover appears like WhatsApp Web) */}
+            {/* OPTIONS BUTTON */}
+            <div
+              className={`absolute top-1 
+    ${
+      isOwnMessage
+        ? "right-2 sm:right-3 md:right-0"
+        : "left-2 sm:left-3 md:-left-3"
+    }
+    opacity-0 group-hover:opacity-100 
+    transition-opacity duration-200 z-30`}
             >
               <button
                 data-option-button
                 onClick={() => setShowOption(!showOption)}
-                className={`p-1.5 sm:p-2 rounded-full transition-all hover:scale-110 ${
-                  theme === "dark" 
-                    ? "text-white hover:bg-white/10" 
-                    : "text-gray-800 hover:bg-black/5"
-                }`}
-                aria-label="Message options"
+                className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 cursor-pointer"
               >
-                <HiDotsVertical size={16} className="sm:w-[18px] sm:h-[18px]" />
+                <HiDotsVertical
+                  className={`text-gray-600 dark:text-gray-900`}
+                  size={18}
+                />
               </button>
             </div>
 
-            {/* Dropdown Menu */}
+            {/* OPTIONS MENU */}
             {showOption && (
               <div
                 ref={optionRef}
-                className={`absolute top-8 sm:top-10 ${
+                className={`absolute top-8 w-36 rounded-lg shadow-xl py-2 text-sm z-50 ${
                   isOwnMessage ? "right-1" : "left-1"
-                } z-50 w-32 sm:w-36 rounded-lg sm:rounded-xl shadow-xl py-2 text-sm border ${
-                  theme === "dark" 
-                    ? "bg-[#1d1f1f] text-white border-gray-700" 
-                    : "bg-white text-black border-gray-200"
+                } ${
+                  theme === "dark"
+                    ? "bg-[#1d1f1f] text-white"
+                    : "bg-white text-black"
                 }`}
               >
-                {/* Copy Button */}
                 <button
                   onClick={handleCopyMessage}
-                  className={`flex items-center w-full px-3 sm:px-4 py-2 sm:py-2.5 gap-2 sm:gap-3 transition-colors ${
-                    theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"
-                  }`}
+                  className="flex items-center gap-2 w-full px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <FaRegCopy size={14} className="flex-shrink-0" />
-                  <span className="text-xs sm:text-sm">Copy</span>
+                  <FaRegCopy size={14} /> Copy
                 </button>
 
-                {/* Delete Button (only for own messages) */}
                 {isOwnMessage && (
                   <button
                     onClick={handleDeleteMessage}
-                    className={`flex items-center w-full px-3 sm:px-4 py-2 sm:py-2.5 gap-2 sm:gap-3 text-red-600 transition-colors ${
-                      theme === "dark" ? "hover:bg-gray-700" : "hover:bg-red-50"
-                    }`}
+                    className="flex items-center w-full px-4 py-2 gap-2 text-red-600 hover:bg-red-50 dark:hover:bg-gray-700"
                   >
-                    <MdDelete className="text-red-600 flex-shrink-0" size={14} />
-                    <span className="text-xs sm:text-sm">Delete</span>
+                    <MdDelete size={14} /> Delete
                   </button>
                 )}
               </div>
             )}
           </div>
 
-          {/* React Button - Side of Message - Only shows when hovering bubble */}
+          {/* --- Reaction Button (appears on hover near bubble) --- */}
           <div
-            className={`absolute ${
-              isOwnMessage ? "-left-10 sm:-left-12" : "-right-10 sm:-right-12"
-            } top-1/2 transform -translate-y-1/2 transition-opacity duration-200 z-20 ${
-              isHoveringBubble ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
+            className={`
+    absolute top-1/2 -translate-y-1/2
+    ${
+      isOwnMessage ? "left-0 -translate-x-[110%]" : "right-0 translate-x-[110%]"
+    }
+    opacity-0 group-hover:opacity-100
+    transition-opacity duration-200 z-20
+  `}
           >
             <button
               onClick={() => setShowReactionPicker(!showReactionPicker)}
-              className={`p-1.5 sm:p-2 rounded-full shadow-lg transition-all hover:scale-110 ${
-                theme === "dark"
-                  ? "bg-[#202c33] hover:bg-[#2a3942]"
-                  : "bg-white hover:bg-gray-50"
-              }`}
-              aria-label="Add reaction"
+              className="p-1.5 rounded-full shadow bg-white dark:bg-[#202c33] cursor-pointer"
             >
-              <FaSmile
-                className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                  theme === "dark" ? "text-gray-300" : "text-gray-600"
-                }`}
-              />
+              <FaSmile className="text-gray-500 dark:text-gray-300" />
             </button>
           </div>
 
-          {/* Reaction Picker */}
+          {/* REACTION PICKER (ROW OF EMOJIS) FIXED RESPONSIVE */}
           {showReactionPicker && (
             <div
               ref={reactionPickerRef}
-              className={`absolute -top-12 sm:-top-14 ${
-                isOwnMessage ? "right-0" : "left-0"
-              } bg-[#202c33] dark:bg-[#2a3942] rounded-full px-2 py-1.5 sm:px-3 sm:py-2 gap-1 shadow-xl flex items-center z-50 border border-gray-600`}
+              className={`absolute -top-12 
+    ${isOwnMessage ? "right-0 translate-x-[20%]" : "left-30 -translate-x-[20%]"} 
+    max-w-[90vw] bg-[#202c33] dark:bg-[#2a3942] 
+    rounded-full px-3 py-2 shadow-xl flex gap-2 z-50`}
             >
-              {quickReactions.map((emoji, index) => (
+              {quickReactions.map((emoji, i) => (
                 <button
-                  key={index}
+                  key={i}
                   onClick={() => handleReactionClick(emoji)}
-                  className="hover:scale-125 transition-transform p-0.5 sm:p-1 text-lg sm:text-xl"
-                  aria-label={`React with ${emoji}`}
+                  className="text-xl hover:scale-100"
                 >
                   {emoji}
                 </button>
               ))}
-              <div className="w-5 h-5 sm:w-6 sm:h-6 mx-1">
-                <button
-                  className="hover:bg-[#ffffff1a] rounded-full p-1 transition-colors"
-                  onClick={() => setShowEmojiPicker(true)}
-                  aria-label="More reactions"
-                >
-                  <FaPlus className="h-3 w-3 sm:h-4 sm:w-4 text-gray-300" />
-                </button>
-              </div>
 
-              {/* Extended Emoji Picker */}
+              {/* More Emoji button */}
+              <button
+                className="hover:bg-white/10 p-2 rounded-full"
+                onClick={() => setShowEmojiPicker(true)}
+              >
+                <FaPlus className="text-gray-300 " />
+              </button>
+
+              {/* EMOJI PICKER POPUP */}
               {showEmojiPicker && (
                 <div
                   ref={emojiPickerRef}
-                  className={`absolute ${
-                    isOwnMessage ? "right-0 top-full" : "left-0 top-full"
-                  } mt-2 z-50 shadow-2xl`}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-2 max-w-[90vw] z-50 shadow-2xl"
                 >
-                  <div className="relative">
-                    <EmojiPicker
-                      onEmojiClick={(emojiObject) => {
-                        handleReactionClick(emojiObject.emoji);
-                      }}
-                      theme={theme}
-                      width={Math.min(window.innerWidth - 32, 320)}
-                      height={Math.min(window.innerHeight * 0.5, 400)}
-                    />
-                    <button
-                      onClick={() => setShowEmojiPicker(false)}
-                      className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 bg-white rounded-full p-1.5 shadow-md transition-colors"
-                      aria-label="Close emoji picker"
-                    >
-                      <RxCross2 size={16} />
-                    </button>
-                  </div>
+                  <EmojiPicker
+                    onEmojiClick={(e) => handleReactionClick(e.emoji)}
+                    theme={theme}
+                    width={Math.min(window.innerWidth - 40, 320)}
+                    height={350}
+                  />
+
+                  <button
+                    onClick={() => setShowEmojiPicker(false)}
+                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow"
+                  >
+                    <RxCross2 size={16} />
+                  </button>
                 </div>
               )}
             </div>
           )}
 
-          {/* Reactions Display - Attached to bottom of bubble */}
+          {/* REACTIONS SUMMARY */}
           {hasReactions && (
             <div
-              className={`absolute -bottom-3 sm:-bottom-4 ${
-                isOwnMessage ? "right-1 sm:right-2" : "left-1 sm:left-2"
-              } z-10`}
+              className={`absolute -bottom-4 ${
+                isOwnMessage ? "right-1" : "left-1"
+              }`}
             >
               <div
-                onClick={() => setShowReactionDetails(!showReactionDetails)}
-                className={`flex items-center gap-1 px-2 py-1 sm:px-2.5 sm:py-1 rounded-full cursor-pointer shadow-lg transition-transform hover:scale-105 mb-4 ${
-                  theme === "dark"
-                    ? "bg-[#2a3942] text-white"
-                    : "bg-gray-200 text-black"
+                className={`flex gap-1 px-3 py-1 rounded-full shadow cursor-pointer ${
+                  theme === "dark" ? "bg-[#2a3942]" : "bg-gray-200"
                 }`}
+                onClick={() => setShowReactionDetails(!showReactionDetails)}
               >
-                {/* Show max 3 emojis */}
-                {reactions.slice(0, 3).map((reaction, index) => (
-                  <span key={`${reaction.emoji}-${index}`} className="text-xs sm:text-sm leading-none">
-                    {reaction.emoji}
-                  </span>
+                {reactions.slice(0, 3).map((r, i) => (
+                  <span key={i}>{r.emoji}</span>
                 ))}
-                {/* Total count */}
-                <span className="text-[10px] sm:text-xs font-semibold ml-0.5">
+
+                <span className=" flex items-center text-xs font-bold">
                   {message.reactions.length}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Reaction Details Popup */}
+          {/* REACTION DETAILS POPUP — FIXED */}
           {showReactionDetails && hasReactions && (
             <div
               ref={reactionDetailsRef}
-              className={`absolute ${
-                isOwnMessage ? "right-0" : "left-0"
-              } bottom-full mb-2 p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-2xl z-50 min-w-[240px] sm:min-w-[280px] max-w-[90vw] sm:max-w-[350px] ${
-                theme === "dark"
-                  ? "bg-[#2a2a2a] text-white"
-                  : "bg-white text-black"
-              } border ${theme === "dark" ? "border-gray-600" : "border-gray-200"}`}
+              className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 
+      z-[9999] w-[90vw] max-w-[350px] p-4 rounded-xl shadow-2xl
+      ${theme === "dark" ? "bg-[#2a2a2a] text-white" : "bg-white text-black"}
+      border ${theme === "dark" ? "border-gray-600" : "border-gray-200"}`}
             >
-              {/* Reaction Tabs */}
-              <div className="flex items-center gap-2 border-b pb-2 sm:pb-3 mb-3 overflow-x-auto scrollbar-thin" style={{
-                borderColor: theme === "dark" ? "#404040" : "#e5e7eb"
-              }}>
-                <button className={`text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full whitespace-nowrap ${
-                  theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-                }`}>
+              {/* Tabs */}
+              <div className="flex gap-2 border-b pb-2 mb-3 overflow-x-auto">
+                <button className="px-3 py-1 rounded-full bg-gray-700 text-white text-sm ">
                   All {message.reactions.length}
                 </button>
-                {reactions.map((reaction, idx) => (
+
+                {reactions.map((r, i) => (
                   <button
-                    key={idx}
-                    className={`text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full whitespace-nowrap transition-colors ${
-                      theme === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-100"
-                    }`}
+                    key={i}
+                    className="px-3 py-1 rounded-full text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
-                    {reaction.emoji} {reaction.count}
+                    {r.emoji} {r.count}
                   </button>
                 ))}
               </div>
 
-              {/* Users List */}
-              <div className="space-y-2 max-h-48 sm:max-h-60 overflow-y-auto scrollbar-thin">
-                {reactions.map((reaction, idx) =>
-                  reaction.users.map((user, userIdx) => (
+              {/* Users */}
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {reactions.map((item, i) =>
+                  item.users.map((u, j) => (
                     <div
-                      key={`${idx}-${userIdx}`}
-                      className="flex items-center justify-between py-1.5 sm:py-2 px-2 rounded transition-colors hover:bg-gray-500/10"
+                      key={`${i}-${j}`}
+                      className="flex justify-between items-center py-2 px-2"
                     >
-                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                        {/* User Avatar */}
-                        {user?.profilePicture ? (
+                      <div className="flex items-center gap-3">
+                        {u?.profilePicture ? (
                           <img
-                            src={user.profilePicture}
-                            alt={user.username}
-                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover flex-shrink-0"
+                            src={u.profilePicture}
+                            className="w-8 h-8 rounded-full"
                           />
                         ) : (
-                          <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold flex-shrink-0 ${
-                            theme === "dark" ? "bg-gray-600 text-white" : "bg-gray-300 text-gray-700"
-                          }`}>
-                            {user?.username?.[0]?.toUpperCase() || "?"}
+                          <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white">
+                            {u?.username?.[0]?.toUpperCase()}
                           </div>
                         )}
-                        {/* Username */}
-                        <div className="flex-1 min-w-0">
-                          <span className="text-xs sm:text-sm font-medium block truncate">
-                            {user?._id === currentUser?._id ? "You" : user?.username || "Unknown"}
-                          </span>
-                        </div>
+
+                        <span className="text-sm">
+                          {u?._id === currentUser?._id ? "You" : u.username}
+                        </span>
                       </div>
-                      {/* Emoji */}
-                      <span className="text-lg sm:text-xl flex-shrink-0 ml-2">{reaction.emoji}</span>
+
+                      <span className="text-xl">{item.emoji}</span>
                     </div>
                   ))
                 )}
