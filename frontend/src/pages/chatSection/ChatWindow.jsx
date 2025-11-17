@@ -74,14 +74,14 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
       if (
         emojiPickerRef.current &&
         !emojiPickerRef.current.contains(event.target) &&
-        !event.target.closest('[data-emoji-button]')
+        !event.target.closest("[data-emoji-button]")
       ) {
         setshowEmojiPicker(false);
       }
       if (
         fileMenuRef.current &&
         !fileMenuRef.current.contains(event.target) &&
-        !event.target.closest('[data-file-button]')
+        !event.target.closest("[data-file-button]")
       ) {
         setShowFileMenu(false);
       }
@@ -170,7 +170,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
 
       const status = online ? "delivered" : "send";
       formData.append("messageStatus", status);
-      
+
       if (message.trim()) {
         formData.append("content", message.trim());
       }
@@ -180,7 +180,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
       }
 
       await sendMessage(formData);
-      
+
       // Clear state
       setMessage("");
       setFilePreview(null);
@@ -247,10 +247,10 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center h-screen text-center px-4 sm:px-6 md:px-8">
         <div className="max-w-xs sm:max-w-md md:max-w-lg w-full">
-          <img 
-            src={whatsappImage} 
-            alt="chat-app" 
-            className="w-full h-auto max-w-[200px] sm:max-w-xs mx-auto mb-4 sm:mb-6" 
+          <img
+            src={whatsappImage}
+            alt="chat-app"
+            className="w-full h-auto max-w-[200px] sm:max-w-xs mx-auto mb-4 sm:mb-6"
           />
           <h2
             className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold mb-3 sm:mb-4 ${
@@ -281,42 +281,43 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
 
   return (
     <>
-      <div className="flex-1 h-screen w-full flex flex-col overflow-hidden">
-        {/* Header - Responsive padding and sizing */}
+      {/* MAIN WRAPPER — Use flex column with proper height constraints */}
+      <div className="flex flex-col h-full w-full">
+        {/* Header - Fixed height */}
         <div
-          className={`p-2.5 sm:p-3 md:p-4 ${
-            theme === "dark"
-              ? "bg-[#303430] text-white"
-              : "bg-[rgb(239,242,245)] text-gray-600"
-          } flex items-center gap-2 sm:gap-3 flex-shrink-0`}
+          className={`flex-shrink-0 p-2.5 sm:p-3 md:p-4 flex items-center gap-2 sm:gap-3
+        ${
+          theme === "dark"
+            ? "bg-[#303430] text-white"
+            : "bg-[rgb(239,242,245)] text-gray-600"
+        }`}
         >
           {isMobile && (
             <button
-              className="focus:outline-none flex-shrink-0 p-1"
+              className="p-1 flex-shrink-0"
               onClick={() => setSelectedContact(null)}
-              aria-label="Back to contacts"
             >
               <FaArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           )}
+
           <img
             src={selectedContact?.profilePicture}
+            className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full flex-shrink-0"
             alt={selectedContact?.username}
-            className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full object-cover flex-shrink-0"
           />
           <div className="flex-grow min-w-0">
-            <h2 className="font-semibold text-sm sm:text-base md:text-lg truncate">
+            <h2 className="font-semibold text-sm sm:text-base truncate">
               {selectedContact?.username}
             </h2>
+
             {isTypeing ? (
-              <div className="text-xs sm:text-sm text-green-500 font-medium">
-                Typing...
-              </div>
+              <p className="text-xs sm:text-sm text-green-500">Typing...</p>
             ) : (
               <p
-                className={`text-xs sm:text-sm ${
+                className={`text-xs sm:text-sm truncate ${
                   theme === "dark" ? "text-gray-400" : "text-gray-500"
-                } truncate`}
+                }`}
               >
                 {online
                   ? "Online"
@@ -326,49 +327,41 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
-            <button
-              className="focus:outline-none p-1"
-              onClick={handleVideoCall}
-              title={online ? "Start video call" : "User is offline"}
-              aria-label={online ? "Start video call" : "User is offline"}
-            >
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <button onClick={handleVideoCall} className="p-1">
               <FaVideo
-                className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 ${
-                  online
-                    ? "text-green-500 hover:text-green-600"
-                    : "text-gray-400 cursor-not-allowed"
+                className={`h-4 w-4 sm:h-5 sm:w-5 ${
+                  online ? "text-green-500" : "text-gray-400"
                 }`}
               />
             </button>
-            <button className="focus:outline-none p-1" aria-label="More options">
+            <button className="p-1">
               <FaEllipsisV className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           </div>
         </div>
 
-        {/* Messages Area - Better overflow handling */}
+        {/* Messages Area - Takes remaining space, scrollable */}
         <div
-          className={`flex-1 p-2 sm:p-3 md:p-4 overflow-y-auto overflow-x-hidden ${
-            theme === "dark" ? "bg-[#191a1a]" : "bg-[rgb(241,236,229)]"
-          }`}
+          className={`flex-1 overflow-y-auto px-2 sm:px-3 md:px-4 py-2
+        ${theme === "dark" ? "bg-[#191a1a]" : "bg-[rgb(241,236,229)]"}`}
           style={{ 
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'thin'
+            WebkitOverflowScrolling: "touch",
+            minHeight: 0 // Important for flex child to be scrollable
           }}
         >
           {Object.entries(groupedMessages).map(([date, msgs]) => (
             <React.Fragment key={date}>
               {renderDateSeparator(new Date(date))}
               {msgs
-                .filter((msg) => msg.conversation === currentConversationId)
-                .map((msg) => (
+                .filter((m) => m.conversation === currentConversationId)
+                .map((m) => (
                   <MessageBubble
-                    selectedContact={selectedContact}
-                    key={msg._id || msg.tempId}
-                    message={msg}
+                    key={m._id}
+                    message={m}
                     theme={theme}
                     currentUser={user}
+                    selectedContact={selectedContact}
                     OnReact={handleReaction}
                     deletedMessage={deletedMessage}
                   />
@@ -378,23 +371,27 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
           <div ref={messageEndRef}></div>
         </div>
 
-        {/* File Preview - Responsive sizing */}
+        {/* File Preview - Fixed height when visible */}
         {filePreview && (
-          <div className={`relative p-2 sm:p-3 ${
-            theme === "dark" ? "bg-[#303430]" : "bg-white"
-          } bg-opacity-95`}>
+          <div
+            className={`flex-shrink-0 relative p-2 sm:p-3 ${
+              theme === "dark" ? "bg-[#303430]" : "bg-white"
+            } bg-opacity-95`}
+          >
             <div className="max-w-full mx-auto">
               {selectedFile?.type.startsWith("video/") ? (
                 <video
                   src={filePreview}
                   controls
                   className="w-full max-w-[280px] xs:max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg object-cover rounded shadow-lg mx-auto"
+                  style={{ maxHeight: "200px" }}
                 />
               ) : (
                 <img
                   src={filePreview}
                   alt="file-preview"
                   className="w-full max-w-[280px] xs:max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg object-cover rounded shadow-lg mx-auto"
+                  style={{ maxHeight: "200px" }}
                 />
               )}
             </div>
@@ -411,11 +408,14 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
           </div>
         )}
 
-        {/* Input Area - Better mobile spacing */}
+        {/* Input Area - Fixed height at bottom */}
         <div
-          className={`p-2 sm:p-3 md:p-4 flex items-end gap-1.5 sm:gap-2 md:gap-3 ${
+          className={`flex-shrink-0 p-2 sm:p-3 md:p-4 flex items-end gap-1.5 sm:gap-2 md:gap-3 ${
             theme === "dark" ? "bg-[#303430]" : "bg-white"
-          } relative flex-shrink-0 safe-bottom`}
+          } relative`}
+          style={{
+            paddingBottom: isMobile ? 'max(0.5rem, env(safe-area-inset-bottom))' : undefined
+          }}
         >
           {/* Emoji button */}
           <button
@@ -426,16 +426,21 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
           >
             <FaSmile
               className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                theme === "dark" ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-600"
+                theme === "dark"
+                  ? "text-gray-400 hover:text-gray-300"
+                  : "text-gray-500 hover:text-gray-600"
               } transition-colors`}
             />
           </button>
 
-          {/* Emoji Picker - Responsive positioning */}
+          {/* Emoji Picker - Fixed positioning */}
           {showEmojiPicker && (
             <div
               ref={emojiPickerRef}
-              className="absolute left-2 sm:left-4 bottom-[52px] sm:bottom-[60px] md:bottom-[68px] z-50 shadow-2xl"
+              className="absolute left-2 sm:left-4 z-50 shadow-2xl"
+              style={{ 
+                bottom: isMobile ? 'calc(100% + 0.5rem)' : 'calc(100% + 0.5rem)'
+              }}
             >
               <EmojiPicker
                 onEmojiClick={(emojiObject) => {
@@ -444,7 +449,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
                 }}
                 theme={theme}
                 width={Math.min(window.innerWidth - 32, 320)}
-                height={Math.min(window.innerHeight * 0.5, 400)}
+                height={Math.min(window.innerHeight * 0.4, 350)}
               />
             </div>
           )}
@@ -459,7 +464,9 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
             >
               <FaPaperclip
                 className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                  theme === "dark" ? "text-gray-400 hover:text-gray-300" : "text-gray-500 hover:text-gray-600"
+                  theme === "dark"
+                    ? "text-gray-400 hover:text-gray-300"
+                    : "text-gray-500 hover:text-gray-600"
                 } transition-colors`}
               />
             </button>
@@ -467,11 +474,14 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
             {showFileMenu && (
               <div
                 ref={fileMenuRef}
-                className={`absolute bottom-[42px] sm:bottom-[50px] left-0 ${
+                className={`absolute left-0 ${
                   theme === "dark" ? "bg-gray-700" : "bg-white"
                 } rounded-lg shadow-xl border ${
                   theme === "dark" ? "border-gray-600" : "border-gray-200"
                 } overflow-hidden min-w-[160px] sm:min-w-[180px] z-40`}
+                style={{ 
+                  bottom: 'calc(100% + 0.5rem)'
+                }}
               >
                 <label
                   className={`px-3 py-2 sm:px-4 sm:py-2.5 w-full text-left text-xs sm:text-sm flex items-center cursor-pointer transition-colors ${
@@ -480,7 +490,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
                       : "hover:bg-gray-100 text-black"
                   }`}
                 >
-                  <FaImage className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" /> 
+                  <FaImage className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span>Image / Video</span>
                   <input
                     type="file"
@@ -497,7 +507,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
                       : "hover:bg-gray-100 text-black"
                   }`}
                 >
-                  <FaFile className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" /> 
+                  <FaFile className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                   <span>Documents</span>
                   <input
                     type="file"
@@ -510,7 +520,7 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
             )}
           </div>
 
-          {/* Input - Better responsive behavior */}
+          {/* Input - Flexible width */}
           <input
             type="text"
             value={message}
@@ -527,10 +537,10 @@ function ChatWindow({ selectedContact, setSelectedContact, isMobile }) {
                 ? "bg-gray-700 text-white border-gray-600 placeholder-gray-400"
                 : "bg-white text-black border-gray-300 placeholder-gray-500"
             }`}
-            style={{ minWidth: '100px' }}
+            style={{ minWidth: "80px" }}
           />
 
-          {/* Send button - Consistent sizing */}
+          {/* Send button */}
           <button
             onClick={handleSendMessage}
             disabled={!message.trim() && !selectedFile}
